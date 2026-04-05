@@ -4,6 +4,7 @@
 require('dotenv').config()
 
 const { connectDB } = require('./src/config/database')
+const User = require('./src/models/User')
 
 // Step 2 — Import express package
 const express = require('express')
@@ -72,4 +73,6 @@ app.listen(PORT, async () => {
   console.log(`📦 Environment: ${process.env.NODE_ENV}`)
 
   await connectDB()
+  await User.sync({ alter: true })
+  console.log('✅ User table synced!')
 })
