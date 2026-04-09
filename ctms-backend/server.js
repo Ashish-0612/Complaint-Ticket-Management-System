@@ -1,10 +1,8 @@
-
-
 // Step 1 — Load .env file variables first — always at top!
 require('dotenv').config()
 
 const { connectDB } = require('./src/config/database')
-const User = require('./src/models/User')
+const { User, Department, Category, Ticket } = require('./src/models/index')
 
 // Step 2 — Import express package
 const express = require('express')
@@ -72,7 +70,21 @@ app.listen(PORT, async () => {
   console.log(`🌐 URL: http://localhost:${PORT}`)
   console.log(`📦 Environment: ${process.env.NODE_ENV}`)
 
+  // Connect to database
   await connectDB()
+
+  // Sync ALL models to database
   await User.sync({ alter: true })
-  console.log('✅ User table synced!')
+  console.log('✅ Users table synced!')
+
+  await Department.sync({ alter: true })
+  console.log('✅ Departments table synced!')
+
+  await Category.sync({ alter: true })
+  console.log('✅ Categories table synced!')
+
+  await Ticket.sync({ alter: true })
+  console.log('✅ Tickets table synced!')
+
+  console.log('🎉 All tables ready!');
 })
