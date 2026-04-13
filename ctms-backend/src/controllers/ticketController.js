@@ -1,172 +1,219 @@
+// Import models
+const { Ticket, User, Department, Category } = require('../models/index')
+
 // ========== GET ALL TICKETS ==========
-// This runs when someone visits GET /api/tickets
+const getAllTickets = async (req, res) => {
+  try {
+    // Get filter options from query string
+    const { status, priority } = req.query
 
-const getAllTickets = (req, res) => {
+    // Build where condition
+    const whereCondition = {}
+    if (status) whereCondition.status = status
+    if (priority) whereCondition.priority = priority
 
-  // req.query has filter options
-  // Example: /api/tickets?status=open
-  const { status, priority } = req.query
+    // Fetch tickets from database
+    const tickets = await Ticket.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    })
 
-  // Dummy data for now — later comes from MySQL database
-  let tickets = [
-    {
-      id: 1,
-      title: 'Laptop not working',
-      status: 'open',
-      priority: 'high',
-      createdBy: 'Ashu'
-    },
-    {
-      id: 2,
-      title: 'Internet is slow',
-      status: 'in-progress',
-      priority: 'medium',
-      createdBy: 'Rahul'
-    },
-    {
-      id: 3,
-      title: 'Printer broken',
-      status: 'closed',
-      priority: 'low',
-      createdBy: 'Priya'
-    }
-  ]
+    res.status(200).json({
+      success: true,
+      count: tickets.length,
+      data: tickets
+    })
 
-  // If user sent ?status=open → filter by status
-  if (status) {
-    tickets = tickets.filter(ticket => ticket.status === status)
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
   }
-
-  // If user sent ?priority=high → filter by priority
-  if (priority) {
-    tickets = tickets.filter(ticket => ticket.priority === priority)
-  }
-
-  // Send response back
-  res.status(200).json({
-    success: true,
-    count: tickets.length,
-    data: tickets
-  })
 }
 
 // ========== GET ONE TICKET ==========
-// This runs when someone visits GET /api/tickets/1
+const getTicketById = async (req, res) => {
+  try {
+    const { id } = req.params
 
-const getTicketById = (req, res) => {
+    const ticket = await Ticket.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Department,
+          as: 'department',
+          attributes: ['id', 'name']
+        },
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name']
+        }
+      ]
+    })
 
-  // Get id from URL
-  // Example: /api/tickets/5 → req.params.id = "5"
-  const { id } = req.params
+    // If ticket not found
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: `Ticket with id ${id} not found`
+      })
+    }
 
-  // Dummy ticket for now
-  const ticket = {
-    id: Number(id),
-    title: 'Laptop not working',
-    description: 'Screen goes black after 5 minutes',
-    status: 'open',
-    priority: 'high',
-    createdBy: 'Ashu',
-    createdAt: new Date()
+    res.status(200).json({
+      success: true,
+      data: ticket
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
   }
-
-  // Send response
-  res.status(200).json({
-    success: true,
-    data: ticket
-  })
 }
 
 // ========== CREATE TICKET ==========
-// This runs when someone sends POST /api/tickets
+const createTicket = async (req, res) => {
+  try {
+    const { title, description, priority, departmentId, categoryId } = req.body
 
-const createTicket = (req, res) => {
+    // Validate required fields
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title is required!'
+      })
+    }
 
-  // Read data from request body
-  // User sends → { title: "Bug", description: "...", priority: "high" }
-  const { title, description, priority } = req.body
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description is required!'
+      })
+    }
 
-  // Check if title is missing
-  if (!title) {
-    return res.status(400).json({
+    if (!departmentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Department is required!'
+      })
+    }
+
+    // Create ticket in database
+    const ticket = await Ticket.create({
+      title,
+      description,
+      priority: priority || 'medium',
+      status: 'open',
+      userId: 1,        // hardcoded for now — later from JWT!
+      departmentId,
+      categoryId: categoryId || null
+    })
+
+    res.status(201).json({
+      success: true,
+      message: 'Ticket created successfully!',
+      data: ticket
+    })
+
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: 'Title is required!'
+      message: error.message
     })
   }
-
-  // Check if description is missing
-  if (!description) {
-    return res.status(400).json({
-      success: false,
-      message: 'Description is required!'
-    })
-  }
-
-  // Build new ticket object
-  const newTicket = {
-    id: Math.floor(Math.random() * 1000),
-    title,
-    description,
-    priority: priority || 'medium',
-    status: 'open',
-    createdAt: new Date()
-  }
-
-  // Send 201 Created response
-  res.status(201).json({
-    success: true,
-    message: 'Ticket created successfully!',
-    data: newTicket
-  })
 }
 
 // ========== UPDATE TICKET ==========
-// This runs when someone sends PUT /api/tickets/1
+const updateTicket = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { title, status, priority } = req.body
 
-const updateTicket = (req, res) => {
+    // Find ticket first
+    const ticket = await Ticket.findByPk(id)
 
-  // Get id from URL
-  const { id } = req.params
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: `Ticket with id ${id} not found`
+      })
+    }
 
-  // Get updated data from body
-  const { title, status, priority } = req.body
+    // Update ticket
+    await ticket.update({
+      title: title || ticket.title,
+      status: status || ticket.status,
+      priority: priority || ticket.priority
+    })
 
-  // Valid status values only
-  const validStatuses = ['open', 'in-progress', 'resolved', 'closed']
+    res.status(200).json({
+      success: true,
+      message: `Ticket ${id} updated successfully!`,
+      data: ticket
+    })
 
-  // Check if status value is valid
-  if (status && !validStatuses.includes(status)) {
-    return res.status(400).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: `Status must be one of: ${validStatuses.join(', ')}`
+      message: error.message
     })
   }
-
-  // Send response
-  res.status(200).json({
-    success: true,
-    message: `Ticket ${id} updated successfully!`,
-    data: { id: Number(id), title, status, priority }
-  })
 }
 
 // ========== DELETE TICKET ==========
-// This runs when someone sends DELETE /api/tickets/1
+const deleteTicket = async (req, res) => {
+  try {
+    const { id } = req.params
 
-const deleteTicket = (req, res) => {
+    // Find ticket first
+    const ticket = await Ticket.findByPk(id)
 
-  // Get id from URL
-  const { id } = req.params
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: `Ticket with id ${id} not found`
+      })
+    }
 
-  // Send response
-  res.status(200).json({
-    success: true,
-    message: `Ticket ${id} deleted successfully!`
-  })
+    // Delete ticket
+    await ticket.destroy()
+
+    res.status(200).json({
+      success: true,
+      message: `Ticket ${id} deleted successfully!`
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
 }
-
-// ========== EXPORT ALL FUNCTIONS ==========
-// Share all functions so ticketRoutes.js can use them
 
 module.exports = {
   getAllTickets,
