@@ -4,6 +4,7 @@ require('dotenv').config()
 const { connectDB } = require('./src/config/database')
 const { User, Department, Category, Ticket } = require('./src/models/index')
 
+
 // Step 2 — Import express package
 const express = require('express')
 
@@ -13,6 +14,8 @@ const cors = require('cors')
 // Step 3 — Import our files
 const ticketRoutes = require('./src/routes/ticketRoutes')
 const errorHandler = require('./src/middleware/errorMiddleware')
+const authRoutes = require('./src/routes/authRoutes')
+
 
 // Step 4 — Create express application
 const app = express()
@@ -42,6 +45,9 @@ app.get('/', (req, res) => {
 // Ticket routes
 // All /api/tickets requests go to ticketRoutes file
 app.use('/api/tickets', ticketRoutes)
+
+// Auth routes
+app.use('/api/auth', authRoutes)
 
 
 // ========== 404 HANDLER ==========
