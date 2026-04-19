@@ -128,7 +128,7 @@ const createTicket = async (req, res) => {
       description,
       priority: priority || 'medium',
       status: 'open',
-      userId: 1,        // hardcoded for now — later from JWT!
+      userId: req.user.id,        // hardcoded for now — later from JWT!
       departmentId,
       categoryId: categoryId || null
     })
