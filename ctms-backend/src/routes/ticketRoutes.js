@@ -8,12 +8,12 @@ const router = express.Router()
 const ticketController = require('../controllers/ticketController');
 
 // Import auth middleware
-const { protect } = require('../middleware/authMiddleware')
+const { protect , authorize} = require('../middleware/authMiddleware')
 
 // ========== TICKET ROUTES ==========
 
 // GET /api/tickets — get ALL tickets
-router.get('/', protect, ticketController.getAllTickets)
+router.get('/', protect,  authorize('admin', 'agent'), ticketController.getAllTickets)
 
 // GET /api/tickets/:id — get ONE ticket
 router.get('/:id', protect,  ticketController.getTicketById)
@@ -22,10 +22,10 @@ router.get('/:id', protect,  ticketController.getTicketById)
 router.post('/',  protect, ticketController.createTicket)
 
 // PUT /api/tickets/:id — UPDATE ticket
-router.put('/:id',  protect,ticketController.updateTicket)
+router.put('/:id',  protect,  authorize('admin', 'agent'), ticketController.updateTicket)
 
 // DELETE /api/tickets/:id — DELETE ticket
-router.delete('/:id', protect, ticketController.deleteTicket)
+router.delete('/:id', protect, authorize('admin'), ticketController.deleteTicket)
 
 // Share this router with other files
 module.exports = router

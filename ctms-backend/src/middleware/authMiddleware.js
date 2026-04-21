@@ -56,4 +56,21 @@ const protect = async (req, res, next) => {
   }
 }
 
-module.exports = { protect }
+// ========== ROLE MIDDLEWARE ==========
+const authorize = (...roles) => {
+  return (req, res, next) => {
+
+    // Check if logged in user's role is allowed
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Role '${req.user.role}' is not authorized to access this route!`
+      })
+    }
+
+    // Role is allowed → continue!
+    next()
+  }
+}
+
+module.exports = { protect, authorize }
