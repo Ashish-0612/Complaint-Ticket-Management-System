@@ -15,6 +15,8 @@ const cors = require('cors')
 const ticketRoutes = require('./src/routes/ticketRoutes')
 const errorHandler = require('./src/middleware/errorMiddleware')
 const authRoutes = require('./src/routes/authRoutes')
+const departmentRoutes = require('./src/routes/departmentRoutes')
+const categoryRoutes = require('./src/routes/categoryRoutes')
 
 
 // Step 4 — Create express application
@@ -48,6 +50,12 @@ app.use('/api/tickets', ticketRoutes)
 
 // Auth routes
 app.use('/api/auth', authRoutes)
+
+// Department routes
+app.use('/api/departments', departmentRoutes)
+
+// Category routes
+app.use('/api/categories', categoryRoutes)
 
 
 // ========== 404 HANDLER ==========
