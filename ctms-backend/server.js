@@ -1,8 +1,9 @@
 // Step 1 — Load .env file variables first — always at top!
 require('dotenv').config()
 
-const { connectDB } = require('./src/config/database')
-const { User, Department, Category, Ticket } = require('./src/models/index')
+// ✅ CORRECT — import from models/index
+const { User, Department, Category, Ticket, Comment, ActivityLog } = require('./src/models/index') 
+const commentRoutes = require('./src/routes/commentRoutes') 
 
 
 // Step 2 — Import express package
@@ -10,6 +11,9 @@ const express = require('express')
 
 // Step 3 — Import cors package
 const cors = require('cors')
+
+// DB connection
+const { connectDB } = require('./src/config/database')
 
 // Step 3 — Import our files
 const ticketRoutes = require('./src/routes/ticketRoutes')
@@ -57,6 +61,9 @@ app.use('/api/departments', departmentRoutes)
 // Category routes
 app.use('/api/categories', categoryRoutes)
 
+// Comment routes — nested under tickets
+app.use('/api/tickets/:ticketId/comments', commentRoutes)
+
 
 // ========== 404 HANDLER ==========
 
@@ -88,17 +95,23 @@ app.listen(PORT, async () => {
   await connectDB()
 
   // Sync ALL models to database
-  await User.sync({ alter: true })
+  await User.sync({ force: false })
   console.log('✅ Users table synced!')
 
-  await Department.sync({ alter: true })
+  await Department.sync({ force: false })
   console.log('✅ Departments table synced!')
 
-  await Category.sync({ alter: true })
+  await Category.sync({ force: false })
   console.log('✅ Categories table synced!')
 
-  await Ticket.sync({ alter: true })
+  await Ticket.sync({force: false })
   console.log('✅ Tickets table synced!')
+
+  await Comment.sync({ force: false })
+  console.log('✅ Comments table synced!')
+
+  await ActivityLog.sync({ force: false })
+  console.log('✅ Activity logs table synced!')
 
   console.log('🎉 All tables ready!');
 })

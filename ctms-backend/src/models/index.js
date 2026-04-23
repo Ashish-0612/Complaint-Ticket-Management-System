@@ -3,6 +3,8 @@ const User = require('./User')
 const Department = require('./Department')
 const Category = require('./Category')
 const Ticket = require('./Ticket')
+const Comment = require('./Comment')           
+const ActivityLog = require('./ActivityLog')
 
 // ========== ASSOCIATIONS ==========
 
@@ -68,11 +70,30 @@ Ticket.belongsTo(User, {
   foreignKey: 'agentId',
   as: 'agent'
 })
+// ========== NEW ASSOCIATIONS ==========
+
+// Ticket has many Comments
+Ticket.hasMany(Comment, { foreignKey: 'ticketId', as: 'comments' })
+Comment.belongsTo(Ticket, { foreignKey: 'ticketId', as: 'ticket' })
+
+// User has many Comments
+User.hasMany(Comment, { foreignKey: 'userId', as: 'comments' })
+Comment.belongsTo(User, { foreignKey: 'userId', as: 'author' })
+
+// Ticket has many ActivityLogs
+Ticket.hasMany(ActivityLog, { foreignKey: 'ticketId', as: 'logs' })
+ActivityLog.belongsTo(Ticket, { foreignKey: 'ticketId', as: 'ticket' })
+
+// User has many ActivityLogs
+User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activities' })
+ActivityLog.belongsTo(User, { foreignKey: 'userId', as: 'user' })
 
 // Export all models
 module.exports = {
   User,
   Department,
   Category,
-  Ticket
+  Ticket,
+  Comment,
+  ActivityLog
 }
