@@ -4,16 +4,40 @@ const { Ticket, User, Department, Category } = require('../models/index')
 // ========== GET ALL TICKETS ==========
 const getAllTickets = async (req, res) => {
   try {
-    // Get filter options from query string
-    const { status, priority } = req.query
+    // Get filter + search + pagination options
+    const {
+      status,
+      priority,
+      search,
+      page = 1,
+      limit = 10
+    } = req.query
 
     // Build where condition
     const whereCondition = {}
+
+    // Filter by status
     if (status) whereCondition.status = status
+
+    // Filter by priority
     if (priority) whereCondition.priority = priority
 
+    // Search by title or description
+    if (search) {
+      const { Op } = require('sequelize')
+      whereCondition[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ]
+    }
+
+    // Pagination
+    const pageNumber = parseInt(page)
+    const limitNumber = parseInt(limit)
+    const offset = (pageNumber - 1) * limitNumber
+
     // Fetch tickets from database
-    const tickets = await Ticket.findAll({
+    const { count, rows: tickets } = await Ticket.findAndCountAll({
       where: whereCondition,
       include: [
         {
@@ -32,12 +56,19 @@ const getAllTickets = async (req, res) => {
           attributes: ['id', 'name']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: limitNumber,
+      offset: offset
     })
+
+    // Calculate total pages
+    const totalPages = Math.ceil(count / limitNumber)
 
     res.status(200).json({
       success: true,
-      count: tickets.length,
+      count: count,
+      totalPages: totalPages,
+      currentPage: pageNumber,
       data: tickets
     })
 
