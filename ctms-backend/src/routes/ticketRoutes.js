@@ -10,6 +10,8 @@ const ticketController = require('../controllers/ticketController');
 // Import auth middleware
 const { protect , authorize} = require('../middleware/authMiddleware')
 
+const { validateTicket } = require('../middleware/validationMiddleware')
+
 // ========== TICKET ROUTES ==========
 
 // GET /api/tickets — get ALL tickets
@@ -19,7 +21,7 @@ router.get('/', protect,  authorize('admin', 'agent'), ticketController.getAllTi
 router.get('/:id', protect,  ticketController.getTicketById)
 
 // POST /api/tickets — CREATE new ticket
-router.post('/',  protect, ticketController.createTicket)
+router.post('/',  protect, validateTicket, ticketController.createTicket)
 
 // PUT /api/tickets/:id — UPDATE ticket
 router.put('/:id',  protect,  authorize('admin', 'agent'), ticketController.updateTicket)
