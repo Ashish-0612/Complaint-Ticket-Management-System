@@ -4,8 +4,9 @@ require('dotenv').config()
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 
+
 // ✅ CORRECT — import from models/index
-const { User, Department, Category, Ticket, Comment, ActivityLog } = require('./src/models/index') 
+const { User, Department, Category, Ticket, Comment, ActivityLog, Attachment } = require('./src/models/index') 
 const commentRoutes = require('./src/routes/commentRoutes') 
 
 
@@ -24,6 +25,7 @@ const errorHandler = require('./src/middleware/errorMiddleware')
 const authRoutes = require('./src/routes/authRoutes')
 const departmentRoutes = require('./src/routes/departmentRoutes')
 const categoryRoutes = require('./src/routes/categoryRoutes')
+const attachmentRoutes = require('./src/routes/attachmentRoutes')
 
 
 // Step 4 — Create express application
@@ -32,6 +34,9 @@ const app = express()
 // ========== SECURITY ==========
 // Helmet — adds security headers
 app.use(helmet())
+
+// Serve uploaded files statically
+app.use('/uploads', express.static('uploads'))
 
 // ========== RATE LIMITING ==========
 const limiter = rateLimit({
@@ -93,6 +98,11 @@ app.use('/api/categories', categoryRoutes)
 // Comment routes — nested under tickets
 app.use('/api/tickets/:ticketId/comments', commentRoutes)
 
+// Attachment routes — nested under tickets
+app.use('/api/tickets/:ticketId/attachments', attachmentRoutes)
+
+
+
 
 // ========== 404 HANDLER ==========
 
@@ -141,6 +151,9 @@ app.listen(PORT, async () => {
 
   await ActivityLog.sync({ force: false })
   console.log('✅ Activity logs table synced!')
+
+  await Attachment.sync({ force: false })
+  console.log('✅ Attachments table synced!')
 
   console.log('🎉 All tables ready!');
 })

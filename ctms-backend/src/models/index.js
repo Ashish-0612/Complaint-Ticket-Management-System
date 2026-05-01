@@ -5,6 +5,7 @@ const Category = require('./Category')
 const Ticket = require('./Ticket')
 const Comment = require('./Comment')           
 const ActivityLog = require('./ActivityLog')
+const Attachment = require('./Attachment')
 
 // ========== ASSOCIATIONS ==========
 
@@ -88,6 +89,29 @@ ActivityLog.belongsTo(Ticket, { foreignKey: 'ticketId', as: 'ticket' })
 User.hasMany(ActivityLog, { foreignKey: 'userId', as: 'activities' })
 ActivityLog.belongsTo(User, { foreignKey: 'userId', as: 'user' })
 
+
+
+
+// Ticket has many Attachments
+Ticket.hasMany(Attachment, {
+  foreignKey: 'ticketId',
+  as: 'attachments'
+})
+Attachment.belongsTo(Ticket, {
+  foreignKey: 'ticketId',
+  as: 'ticket'
+})
+
+// User has many Attachments
+User.hasMany(Attachment, {
+  foreignKey: 'userId',
+  as: 'attachments'
+})
+Attachment.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'uploader'
+})
+
 // Export all models
 module.exports = {
   User,
@@ -95,5 +119,6 @@ module.exports = {
   Category,
   Ticket,
   Comment,
-  ActivityLog
+  ActivityLog,
+  Attachment
 }
