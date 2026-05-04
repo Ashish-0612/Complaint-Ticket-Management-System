@@ -1,5 +1,6 @@
 // Import models
 const { Ticket, User, Department, Category } = require('../models/index')
+const { sendEmail, ticketCreatedEmail } = require('../config/email')
 
 // ========== GET ALL TICKETS ==========
 const getAllTickets = async (req, res) => {
@@ -163,6 +164,13 @@ const createTicket = async (req, res) => {
       departmentId,
       categoryId: categoryId || null
     })
+
+    // Send ticket created email
+      await sendEmail({
+        to: req.user.email,
+        subject: `Ticket #${ticket.id} Created Successfully!`,
+        html: ticketCreatedEmail(req.user.name, ticket.id, ticket.title)
+      })
 
     res.status(201).json({
       success: true,

@@ -1,9 +1,12 @@
 // Import bcrypt for password hashing
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
 
 // Import User model
 const { User } = require('../models/index')
+
+// Import email functions
+const { sendEmail, welcomeEmail } = require('../config/email')
 
 // ========== REGISTER ==========
 const register = async (req, res) => {
@@ -57,7 +60,14 @@ const register = async (req, res) => {
       role: role || 'user'
     })
 
-    // Step 6 — Send response (never send password back!)
+    // Step 6 — Send welcome email
+    await sendEmail({
+      to: user.email,
+      subject: 'Welcome to CTMS! 🎉',
+      html: welcomeEmail(user.name)
+    })
+
+    // Step 7 — Send response (never send password back!)
     res.status(201).json({
       success: true,
       message: 'Account created successfully!',
