@@ -7,6 +7,7 @@ import {
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Dashboard from "./pages/User/Dashboard";
+import CreateTicket from "./pages/User/CreateTicket";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AgentPanel from "./pages/Agent/AgentPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,7 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* User protected route */}
+          {/* User routes */}
           <Route
             path="/dashboard"
             element={
@@ -31,7 +32,16 @@ function App() {
             }
           />
 
-          {/* Admin protected route */}
+          <Route
+            path="/create-ticket"
+            element={
+              <ProtectedRoute allowedRoles={["user", "admin", "agent"]}>
+                <CreateTicket />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin route */}
           <Route
             path="/admin"
             element={
@@ -41,7 +51,7 @@ function App() {
             }
           />
 
-          {/* Agent protected route */}
+          {/* Agent route */}
           <Route
             path="/agent"
             element={
