@@ -15,7 +15,7 @@ const { validateTicket } = require('../middleware/validationMiddleware')
 // ========== TICKET ROUTES ==========
 
 // GET /api/tickets — get ALL tickets
-router.get('/', protect,  authorize('admin', 'agent'), ticketController.getAllTickets)
+router.get('/', protect, ticketController.getAllTickets)
 
 // GET /api/tickets/:id — get ONE ticket
 router.get('/:id', protect,  ticketController.getTicketById)
