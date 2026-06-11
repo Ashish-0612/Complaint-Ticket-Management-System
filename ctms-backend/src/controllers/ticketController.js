@@ -87,13 +87,16 @@ const getAllTickets = async (req, res) => {
 // ========== GET ONE TICKET ==========
 const getTicketById = async (req, res) => {
   try {
-    const { id } = req.params
-
-    const ticket = await Ticket.findByPk(id, {
+    const ticket = await Ticket.findByPk(req.params.id, {
       include: [
         {
           model: User,
           as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: User,
+          as: 'agent',
           attributes: ['id', 'name', 'email']
         },
         {
@@ -109,11 +112,10 @@ const getTicketById = async (req, res) => {
       ]
     })
 
-    // If ticket not found
     if (!ticket) {
       return res.status(404).json({
         success: false,
-        message: `Ticket with id ${id} not found`
+        message: 'Ticket not found!'
       })
     }
 
@@ -192,39 +194,37 @@ const createTicket = async (req, res) => {
 // ========== UPDATE TICKET ==========
 const updateTicket = async (req, res) => {
   try {
-    const { id } = req.params
-    const { title, status, priority } = req.body
+    const { id } = req.params;
+    const { title, status, priority, agentId } = req.body; // ← agentId add karo
 
-    // Find ticket first
-    const ticket = await Ticket.findByPk(id)
+    const ticket = await Ticket.findByPk(id);
 
     if (!ticket) {
       return res.status(404).json({
         success: false,
-        message: `Ticket with id ${id} not found`
-      })
+        message: `Ticket with id ${id} not found`,
+      });
     }
 
-    // Update ticket
     await ticket.update({
       title: title || ticket.title,
       status: status || ticket.status,
-      priority: priority || ticket.priority
-    })
+      priority: priority || ticket.priority,
+      agentId: agentId !== undefined ? agentId : ticket.agentId, // ← ye add karo
+    });
 
     res.status(200).json({
       success: true,
       message: `Ticket ${id} updated successfully!`,
-      data: ticket
-    })
-
+      data: ticket,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
-}
+};
 
 // ========== DELETE TICKET ==========
 const deleteTicket = async (req, res) => {

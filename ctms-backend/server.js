@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit')
 // ✅ CORRECT — import from models/index
 const { User, Department, Category, Ticket, Comment, ActivityLog, Attachment } = require('./src/models/index') 
 const commentRoutes = require('./src/routes/commentRoutes') 
+const userRoutes = require("./src/routes/userRoutes");
 
 
 // Step 2 — Import express package
@@ -94,6 +95,9 @@ app.use('/api/departments', departmentRoutes)
 
 // Category routes
 app.use('/api/categories', categoryRoutes)
+
+// User routes
+app.use('/api/users', userRoutes)
 
 // Comment routes — nested under tickets
 app.use('/api/tickets/:ticketId/comments', commentRoutes)
