@@ -3,47 +3,51 @@ const { Ticket, User, Department, Category } = require('../models/index')
 const { sendEmail, ticketCreatedEmail } = require('../config/email')
 
 // ========== GET ALL TICKETS ==========
+  // GET ALL TICKETS
 const getAllTickets = async (req, res) => {
   try {
-    // Get filter + search + pagination options
-    const {
-      status,
-      priority,
-      search,
-      page = 1,
-      limit = 10
-    } = req.query
+    const { status, priority, search, page = 1, limit = 10 } = req.query
 
-    // Build where condition
-    const whereCondition = {}
+    const pageNumber = parseInt(page)
+    const limitNumber = parseInt(limit)
+    const offset = (pageNumber - 1) * limitNumber
 
-    // Filter by status
+    // Filter object
+    let whereCondition = {}
+
+    // Agar agent hai → sirf uske assigned tickets
+    if (req.user.role === 'agent') {
+      whereCondition.agentId = req.user.id
+    }
+
+    // Agar user hai → sirf uske apne tickets
+    if (req.user.role === 'user') {
+      whereCondition.userId = req.user.id
+    }
+
+    // Admin → sabke tickets (no filter)
+
     if (status) whereCondition.status = status
-
-    // Filter by priority
     if (priority) whereCondition.priority = priority
 
-    // Search by title or description
     if (search) {
-      const { Op } = require('sequelize')
       whereCondition[Op.or] = [
         { title: { [Op.like]: `%${search}%` } },
         { description: { [Op.like]: `%${search}%` } }
       ]
     }
 
-    // Pagination
-    const pageNumber = parseInt(page)
-    const limitNumber = parseInt(limit)
-    const offset = (pageNumber - 1) * limitNumber
-
-    // Fetch tickets from database
     const { count, rows: tickets } = await Ticket.findAndCountAll({
       where: whereCondition,
       include: [
         {
           model: User,
           as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: User,
+          as: 'agent',
           attributes: ['id', 'name', 'email']
         },
         {
@@ -62,7 +66,6 @@ const getAllTickets = async (req, res) => {
       offset: offset
     })
 
-    // Calculate total pages
     const totalPages = Math.ceil(count / limitNumber)
 
     res.status(200).json({
