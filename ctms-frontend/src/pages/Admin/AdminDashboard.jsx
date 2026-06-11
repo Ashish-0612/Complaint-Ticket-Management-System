@@ -171,7 +171,11 @@ const AdminDashboard = () => {
           {!loading && tickets.length > 0 && (
             <div className="divide-y divide-gray-100">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="p-6 hover:bg-gray-50">
+                <div
+                  key={ticket.id}
+                  onClick={() => navigate(`/tickets/${ticket.id}`)}
+                  className="p-6 hover:bg-gray-50 cursor-pointer"
+                >
                   <div className="flex justify-between items-start">
                     {/* Ticket Info */}
                     <div className="flex-1">

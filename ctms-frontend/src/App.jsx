@@ -11,6 +11,7 @@ import CreateTicket from "./pages/User/CreateTicket";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AgentPanel from "./pages/Agent/AgentPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TicketDetail from "./pages/User/TicketDetail";
 
 function App() {
   return (
@@ -37,6 +38,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["user", "admin", "agent"]}>
                 <CreateTicket />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tickets/:id"
+            element={
+              <ProtectedRoute allowedRoles={["user", "admin", "agent"]}>
+                <TicketDetail />
               </ProtectedRoute>
             }
           />

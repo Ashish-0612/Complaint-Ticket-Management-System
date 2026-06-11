@@ -17,7 +17,7 @@ const Dashboard = () => {
       try {
         const res = await API.get("/tickets");
         setTickets(res.data.data);
-      } catch (err) {
+      } catch  {
         setError("Failed to load tickets!");
       } finally {
         setLoading(false);
@@ -122,7 +122,8 @@ const Dashboard = () => {
             {tickets.map((ticket) => (
               <div
                 key={ticket.id}
-                className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500"
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
+                className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 cursor-pointer hover:shadow-lg transition"
               >
                 <div className="flex justify-between items-start">
                   <div>
