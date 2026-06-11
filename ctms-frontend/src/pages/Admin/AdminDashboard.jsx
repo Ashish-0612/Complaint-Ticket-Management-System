@@ -8,6 +8,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const [tickets, setTickets] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
@@ -18,14 +19,18 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const fetchTickets = async () => {
+    const fetchData = async () => {
       try {
-        const res = await API.get("/tickets");
-        const allTickets = res.data.data;
+        // Dono ek saath fetch karo!
+        const [ticketsRes, agentsRes] = await Promise.all([
+          API.get("/tickets"),
+          API.get("/users/agents"),
+        ]);
 
+        const allTickets = ticketsRes.data.data;
         setTickets(allTickets);
+        setAgents(agentsRes.data.data);
 
-        // Stats calculate karo
         setStats({
           total: allTickets.length,
           open: allTickets.filter((t) => t.status === "open").length,
@@ -33,13 +38,13 @@ const AdminDashboard = () => {
             .length,
           resolved: allTickets.filter((t) => t.status === "resolved").length,
         });
-      } catch  {
-        setError("Failed to load tickets!");
+      } catch {
+        setError("Failed to load data!");
       } finally {
         setLoading(false);
       }
     };
-    fetchTickets();
+    fetchData();
   }, []);
 
   const handleLogout = () => {
@@ -62,10 +67,30 @@ const AdminDashboard = () => {
         inProgress: updated.filter((t) => t.status === "in-progress").length,
         resolved: updated.filter((t) => t.status === "resolved").length,
       });
-    } catch  {
+    } catch {
       alert("Failed to update status!");
     }
   };
+const handleAgentAssign = async (ticketId, agentId) => {
+  try {
+    await API.put(`/tickets/${ticketId}`, {
+      agentId: agentId === "" ? null : parseInt(agentId),
+    });
+
+    const res = await API.get("/tickets");
+    const allTickets = res.data.data;
+    setTickets(allTickets);
+
+    setStats({
+      total: allTickets.length,
+      open: allTickets.filter((t) => t.status === "open").length,
+      inProgress: allTickets.filter((t) => t.status === "in-progress").length,
+      resolved: allTickets.filter((t) => t.status === "resolved").length,
+    });
+  } catch {
+    alert("Failed to assign agent!");
+  }
+};
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -123,19 +148,16 @@ const AdminDashboard = () => {
             <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
             <p className="text-gray-500 mt-1">Total Tickets</p>
           </div>
-
           <div className="bg-white p-6 rounded-lg shadow-md text-center">
             <p className="text-3xl font-bold text-blue-600">{stats.open}</p>
             <p className="text-gray-500 mt-1">Open</p>
           </div>
-
           <div className="bg-white p-6 rounded-lg shadow-md text-center">
             <p className="text-3xl font-bold text-yellow-600">
               {stats.inProgress}
             </p>
             <p className="text-gray-500 mt-1">In Progress</p>
           </div>
-
           <div className="bg-white p-6 rounded-lg shadow-md text-center">
             <p className="text-3xl font-bold text-green-600">
               {stats.resolved}
@@ -172,13 +194,15 @@ const AdminDashboard = () => {
             <div className="divide-y divide-gray-100">
               {tickets.map((ticket) => (
                 <div
-                  key={ticket.id}
-                  onClick={() => navigate(`/tickets/${ticket.id}`)}
-                  className="p-6 hover:bg-gray-50 cursor-pointer"
+                  key={`${ticket.id}-${ticket.agentId}`}
+                  className="p-6 hover:bg-gray-50"
                 >
                   <div className="flex justify-between items-start">
                     {/* Ticket Info */}
-                    <div className="flex-1">
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => navigate(`/tickets/${ticket.id}`)}
+                    >
                       <h3 className="font-semibold text-gray-800">
                         #{ticket.id} — {ticket.title}
                       </h3>
@@ -210,23 +234,47 @@ const AdminDashboard = () => {
                       )}
                     </div>
 
-                    {/* Status Dropdown */}
-                    <div className="ml-4 text-right">
-                      <label className="text-xs text-gray-500 block mb-1">
-                        Change Status:
-                      </label>
-                      <select
-                        value={ticket.status}
-                        onChange={(e) =>
-                          handleStatusChange(ticket.id, e.target.value)
-                        }
-                        className="border p-2 rounded text-sm outline-none focus:border-blue-500"
-                      >
-                        <option value="open">Open</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                      </select>
+                    {/* Right side — dropdowns */}
+                    <div className="ml-4 flex flex-col gap-3">
+                      {/* Status Dropdown */}
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">
+                          Status:
+                        </label>
+                        <select
+                          value={ticket.status}
+                          onChange={(e) =>
+                            handleStatusChange(ticket.id, e.target.value)
+                          }
+                          className="border p-2 rounded text-sm outline-none focus:border-blue-500 w-36"
+                        >
+                          <option value="open">Open</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+
+                      {/* Agent Assign Dropdown */}
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">
+                          Assign Agent:
+                        </label>
+                        <select
+                          value={ticket.agentId || ""}
+                          onChange={(e) =>
+                            handleAgentAssign(ticket.id, e.target.value)
+                          }
+                          className="border p-2 rounded text-sm outline-none focus:border-blue-500 w-36"
+                        >
+                          <option value="">Unassigned</option>
+                          {agents.map((agent) => (
+                            <option key={agent.id} value={agent.id}>
+                              {agent.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
