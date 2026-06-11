@@ -33,7 +33,7 @@ const AdminDashboard = () => {
             .length,
           resolved: allTickets.filter((t) => t.status === "resolved").length,
         });
-      } catch (err) {
+      } catch  {
         setError("Failed to load tickets!");
       } finally {
         setLoading(false);
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
         inProgress: updated.filter((t) => t.status === "in-progress").length,
         resolved: updated.filter((t) => t.status === "resolved").length,
       });
-    } catch (err) {
+    } catch  {
       alert("Failed to update status!");
     }
   };
