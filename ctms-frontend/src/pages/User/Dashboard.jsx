@@ -2,6 +2,18 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
+import {
+  Ticket,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  PlusCircle,
+  Search,
+  ChevronRight,
+  LogOut,
+  LayoutDashboard,
+  Bell,
+} from "lucide-react";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -10,14 +22,28 @@ const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [stats, setStats] = useState({
+    total: 0,
+    open: 0,
+    inProgress: 0,
+    resolved: 0,
+  });
 
-  // Fetch tickets on page load
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         const res = await API.get("/tickets");
-        setTickets(res.data.data);
-      } catch  {
+        const myTickets = res.data.data;
+        setTickets(myTickets);
+        setStats({
+          total: myTickets.length,
+          open: myTickets.filter((t) => t.status === "open").length,
+          inProgress: myTickets.filter((t) => t.status === "in-progress")
+            .length,
+          resolved: myTickets.filter((t) => t.status === "resolved").length,
+        });
+      } catch {
         setError("Failed to load tickets!");
       } finally {
         setLoading(false);
@@ -31,136 +57,356 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  // Status color helper
+  const filteredTickets = tickets.filter((ticket) =>
+    ticket.title?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   const getStatusColor = (status) => {
     switch (status) {
       case "open":
-        return "bg-blue-100 text-blue-600";
+        return "bg-blue-50 text-blue-700 border border-blue-200";
       case "in-progress":
-        return "bg-yellow-100 text-yellow-600";
+        return "bg-amber-50 text-amber-700 border border-amber-200";
       case "resolved":
-        return "bg-green-100 text-green-600";
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
       case "closed":
-        return "bg-gray-100 text-gray-600";
+        return "bg-gray-100 text-gray-600 border border-gray-200";
       default:
         return "bg-gray-100 text-gray-600";
     }
   };
 
-  // Priority color helper
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "critical":
-        return "bg-red-100 text-red-600";
+        return "bg-red-50 text-red-700 border border-red-200";
       case "high":
-        return "bg-orange-100 text-orange-600";
+        return "bg-orange-50 text-orange-700 border border-orange-200";
       case "medium":
-        return "bg-yellow-100 text-yellow-600";
+        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
       case "low":
-        return "bg-green-100 text-green-600";
+        return "bg-green-50 text-green-700 border border-green-200";
       default:
         return "bg-gray-100 text-gray-600";
+    }
+  };
+
+  const getPriorityDot = (priority) => {
+    switch (priority) {
+      case "critical":
+        return "bg-red-500";
+      case "high":
+        return "bg-orange-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "low":
+        return "bg-green-500";
+      default:
+        return "bg-gray-400";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navbar */}
-      <nav className="bg-white shadow-md p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-blue-600">CTMS</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-600">Welcome, {user?.name}!</span>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* ========== SIDEBAR ========== */}
+      <aside className="w-64 bg-gray-900 flex flex-col fixed h-full z-20">
+        {/* Logo */}
+        <div className="px-6 py-5 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Ticket size={18} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-lg leading-none">
+                CTMS
+              </h1>
+              <p className="text-gray-500 text-xs">User Panel</p>
+            </div>
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="px-4 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-white text-sm font-medium truncate">
+                {user?.name}
+              </p>
+              <p className="text-gray-400 text-xs truncate">{user?.email}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav Links */}
+        <nav className="flex-1 px-4 py-4 space-y-1">
+          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-3 mb-3">
+            Main Menu
+          </p>
+
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium">
+            <LayoutDashboard size={18} />
+            Dashboard
+          </button>
+
           <button
             onClick={() => navigate("/create-ticket")}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all"
           >
-            + New Ticket
+            <PlusCircle size={18} />
+            New Ticket
           </button>
+
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all">
+            <Ticket size={18} />
+            My Tickets
+            <span className="ml-auto bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
+              {stats.total}
+            </span>
+          </button>
+        </nav>
+
+        {/* Logout */}
+        <div className="px-4 py-4 border-t border-gray-800">
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm font-medium transition-all"
           >
+            <LogOut size={18} />
             Logout
           </button>
         </div>
-      </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">My Tickets</h2>
-
-        {/* Loading */}
-        {loading && (
-          <div className="text-center py-10">
-            <p className="text-gray-500">Loading tickets...</p>
+      {/* ========== MAIN CONTENT ========== */}
+      <div className="ml-64 flex-1 flex flex-col overflow-hidden">
+        {/* Top Navbar */}
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">My Dashboard</h1>
+            <p className="text-gray-500 text-sm">
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-100 text-red-600 p-4 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && tickets.length === 0 && (
-          <div className="bg-white p-10 rounded-lg shadow text-center">
-            <p className="text-gray-500 text-lg">No tickets found!</p>
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/create-ticket")}
-              className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
             >
-              Create Your First Ticket
+              <PlusCircle size={16} />
+              New Ticket
+            </button>
+            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+              <Bell size={20} />
+              {stats.open > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
             </button>
           </div>
-        )}
+        </header>
 
-        {/* Tickets list */}
-        {!loading && tickets.length > 0 && (
-          <div className="grid grid-cols-1 gap-4">
-            {tickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                onClick={() => navigate(`/tickets/${ticket.id}`)}
-                className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 cursor-pointer hover:shadow-lg transition"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      #{ticket.id} — {ticket.title}
-                    </h3>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {ticket.description?.substring(0, 100)}...
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(ticket.status)}`}
-                      >
-                        {ticket.status}
-                      </span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(ticket.priority)}`}
-                      >
-                        {ticket.priority}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-400">
-                      {new Date(ticket.createdAt).toLocaleDateString()}
-                    </p>
-                    {ticket.department && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {ticket.department.name}
-                      </p>
-                    )}
-                  </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <Ticket size={22} className="text-blue-600" />
+                </div>
+                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium">
+                  Total
+                </span>
+              </div>
+              <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
+              <p className="text-gray-500 text-sm mt-1">My Tickets</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center">
+                  <AlertCircle size={22} className="text-orange-600" />
+                </div>
+                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full font-medium">
+                  Pending
+                </span>
+              </div>
+              <p className="text-3xl font-bold text-orange-600">{stats.open}</p>
+              <p className="text-gray-500 text-sm mt-1">Open</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <Clock size={22} className="text-amber-600" />
+                </div>
+                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full font-medium">
+                  Active
+                </span>
+              </div>
+              <p className="text-3xl font-bold text-amber-600">
+                {stats.inProgress}
+              </p>
+              <p className="text-gray-500 text-sm mt-1">In Progress</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <CheckCircle size={22} className="text-emerald-600" />
+                </div>
+                <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full font-medium">
+                  Done
+                </span>
+              </div>
+              <p className="text-3xl font-bold text-emerald-600">
+                {stats.resolved}
+              </p>
+              <p className="text-gray-500 text-sm mt-1">Resolved</p>
+            </div>
+          </div>
+
+          {/* Tickets Section */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">
+                    My Tickets
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    {filteredTickets.length} tickets found
+                  </p>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search tickets..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
+                  />
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Loading */}
+            {loading && (
+              <div className="text-center py-16">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading tickets...</p>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 m-6 rounded-xl border border-red-100">
+                {error}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && filteredTickets.length === 0 && (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Ticket size={32} className="text-blue-400" />
+                </div>
+                <p className="text-gray-700 font-semibold text-lg">
+                  No tickets yet!
+                </p>
+                <p className="text-gray-400 text-sm mt-1 mb-6">
+                  Create your first support ticket
+                </p>
+                <button
+                  onClick={() => navigate("/create-ticket")}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  <PlusCircle size={16} />
+                  Create Ticket
+                </button>
+              </div>
+            )}
+
+            {/* Tickets List */}
+            {!loading && filteredTickets.length > 0 && (
+              <div className="divide-y divide-gray-50">
+                {filteredTickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    onClick={() => navigate(`/tickets/${ticket.id}`)}
+                    className="p-5 hover:bg-gray-50 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityDot(ticket.priority)}`}
+                          ></div>
+                          <span className="text-xs text-gray-400 font-mono">
+                            #{ticket.id}
+                          </span>
+                          <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">
+                            {ticket.title}
+                          </h3>
+                        </div>
+
+                        <p className="text-gray-500 text-sm mb-3 ml-4 line-clamp-1">
+                          {ticket.description}
+                        </p>
+
+                        <div className="flex gap-2 flex-wrap ml-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}
+                          >
+                            {ticket.status}
+                          </span>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}
+                          >
+                            {ticket.priority}
+                          </span>
+                          {ticket.department && (
+                            <span className="px-2.5 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 border border-purple-200">
+                              {ticket.department.name}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3 ml-4 text-xs text-gray-400">
+                          <span>
+                            📅 {new Date(ticket.createdAt).toLocaleDateString()}
+                          </span>
+                          {ticket.agent && (
+                            <>
+                              <span>·</span>
+                              <span>🔧 {ticket.agent.name}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <ChevronRight
+                        size={18}
+                        className="text-gray-300 group-hover:text-blue-400 flex-shrink-0 mt-1"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
