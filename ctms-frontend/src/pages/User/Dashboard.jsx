@@ -11,7 +11,7 @@ import {
   Clock,
   AlertCircle,
   LogOut,
-  Search,
+  Search, 
   FileText,
   Activity,
 } from "lucide-react";

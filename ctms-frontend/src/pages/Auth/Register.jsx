@@ -433,10 +433,11 @@ const Register = () => {
               >
                 <option value="user">User — Raise support tickets</option>
                 <option value="agent">Agent — Handle assigned tickets</option>
+                <option value="admin">Admin — Assign Tickets to Agent</option>
               </select>
-            </div>
+            </div> 
 
-            {/* Submit */}
+            {/* Submit */} 
             <button
               type="submit"
               disabled={loading}

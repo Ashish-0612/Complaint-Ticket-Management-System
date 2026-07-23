@@ -1,3 +1,4 @@
+console.log("DAY35 ADMIN");
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -15,7 +16,6 @@ import {
   ChevronRight,
   LogOut,
   LayoutDashboard,
-  PlusCircle,
   Settings,
 } from "lucide-react";
 
@@ -200,13 +200,13 @@ const AdminDashboard = () => {
             Dashboard
           </button>
 
-          <button
+          {/* <button
             onClick={() => navigate("/create-ticket")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all"
           >
             <PlusCircle size={18} />
             Create Ticket
-          </button>
+          </button> */}
 
           <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all">
             <Users size={18} />
