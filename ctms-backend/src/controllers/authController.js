@@ -169,4 +169,123 @@ const login = async (req, res) => {
   }
 }
 
-module.exports = { register, login }
+// ========== GET PROFILE ==========
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'name', 'email', 'role', 'isActive', 'createdAt']
+    })
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found!'
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+// ========== UPDATE PROFILE ==========
+const updateProfile = async (req, res) => {
+  try {
+    const { name } = req.body
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name is required!'
+      })
+    }
+
+    const user = await User.findByPk(req.user.id)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found!'
+      })
+    }
+
+    await user.update({ name })
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully!',
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+// ========== CHANGE PASSWORD ==========
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required!'
+      })
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters!'
+      })
+    }
+
+    const user = await User.findByPk(req.user.id)
+
+    // Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password)
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect!'
+      })
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+    await user.update({ password: hashedPassword })
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully!'
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+module.exports = { register, login, getProfile, updateProfile, changePassword };

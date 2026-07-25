@@ -1,15 +1,26 @@
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
 
-// Import auth controller
-const { register , login} = require('../controllers/authController')
-const { validateRegister, validateLogin } = require('../middleware/validationMiddleware')
+const {
+  register,
+  login,
+  getProfile,
+  updateProfile,
+  changePassword,
+} = require("../controllers/authController");
+const {
+  validateRegister,
+  validateLogin,
+} = require("../middleware/validationMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 // ========== AUTH ROUTES ==========
+router.post("/register", validateRegister, register);
+router.post("/login", validateLogin, login);
 
-// POST /api/auth/register — create new account
-router.post('/register',validateRegister, register)
-
-router.post('/login',validateLogin , login)
+// ========== PROFILE ROUTES ==========
+router.get("/profile", protect, getProfile);
+router.put("/profile", protect, updateProfile);
+router.put("/change-password", protect, changePassword);
 
 module.exports = router;
