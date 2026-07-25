@@ -66,7 +66,7 @@ const TicketDetail = () => {
     setCommentLoading(true);
     try {
       const res = await API.post(`/tickets/${id}/comments`, {
-        content: newComment,
+        comment: newComment,
       });
       setComments([...comments, res.data.data]);
       setNewComment("");
@@ -405,13 +405,13 @@ const TicketDetail = () => {
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                          {comment.author?.name?.charAt(0).toUpperCase() || "U"}
                         </div>
                         <div className="flex-1">
                           <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-xs font-semibold text-gray-800">
-                                {comment.user?.name || "Unknown"}
+                                {comment.author?.name || "Unknown"}
                               </span>
                               <span className="text-xs text-gray-400">
                                 {new Date(
@@ -420,7 +420,7 @@ const TicketDetail = () => {
                               </span>
                             </div>
                             <p className="text-gray-700 text-sm">
-                              {comment.content}
+                              {comment.comment}
                             </p>
                           </div>
                         </div>
