@@ -3,33 +3,32 @@ const { Comment, User, ActivityLog } = require('../models/index')
 // ========== GET ALL COMMENTS FOR A TICKET ==========
 const getComments = async (req, res) => {
   try {
-    const { ticketId } = req.params
+    const { ticketId } = req.params;
 
     const comments = await Comment.findAll({
       where: { ticketId },
       include: [
         {
           model: User,
-          as: 'author',
-          attributes: ['id', 'name', 'role']
-        }
+          as: "author",
+          attributes: ["id", "name", "role"],
+        },
       ],
-      order: [['createdAt', 'ASC']]
-    })
+      order: [["createdAt", "ASC"]],
+    });
 
     res.status(200).json({
       success: true,
       count: comments.length,
-      data: comments
-    })
-
+      data: comments,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
-}
+};
 
 // ========== ADD COMMENT TO TICKET ==========
 const addComment = async (req, res) => {
