@@ -47,17 +47,18 @@ const AdminDashboard = () => {
     resolved: 0,
     closed: 0,
   });
+  const [chartData, setChartData] = useState([]);
 
   // Dummy chart data — real data baad mein add karenge
-  const chartData = [
-    { day: "Mon", Total: 4, Resolved: 2, Pending: 2 },
-    { day: "Tue", Total: 6, Resolved: 3, Pending: 3 },
-    { day: "Wed", Total: 5, Resolved: 4, Pending: 1 },
-    { day: "Thu", Total: 8, Resolved: 5, Pending: 3 },
-    { day: "Fri", Total: 7, Resolved: 4, Pending: 3 },
-    { day: "Sat", Total: 3, Resolved: 2, Pending: 1 },
-    { day: "Sun", Total: 5, Resolved: 3, Pending: 2 },
-  ];
+  // const chartData = [
+  //   { day: "Mon", Total: 4, Resolved: 2, Pending: 2 },
+  //   { day: "Tue", Total: 6, Resolved: 3, Pending: 3 },
+  //   { day: "Wed", Total: 5, Resolved: 4, Pending: 1 },
+  //   { day: "Thu", Total: 8, Resolved: 5, Pending: 3 },
+  //   { day: "Fri", Total: 7, Resolved: 4, Pending: 3 },
+  //   { day: "Sat", Total: 3, Resolved: 2, Pending: 1 },
+  //   { day: "Sun", Total: 5, Resolved: 3, Pending: 2 },
+  // ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,6 +78,35 @@ const AdminDashboard = () => {
           resolved: allTickets.filter((t) => t.status === "resolved").length,
           closed: allTickets.filter((t) => t.status === "closed").length,
         });
+        // Real chart data — last 7 days
+        const last7Days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const today = new Date().getDay();
+
+        // Last 7 days order banao
+        const orderedDays = [];
+        for (let i = 6; i >= 0; i--) {
+          orderedDays.push(last7Days[(today - i + 7) % 7]);
+        }
+
+        // Tickets ko day wise group karo
+        const chartResult = orderedDays.map((day) => {
+          const dayTickets = allTickets.filter((t) => {
+            const ticketDay = new Date(t.createdAt).toLocaleDateString(
+              "en-US",
+              { weekday: "short" },
+            );
+            return ticketDay === day;
+          });
+
+          return {
+            day,
+            Total: dayTickets.length,
+            Resolved: dayTickets.filter((t) => t.status === "resolved").length,
+            Pending: dayTickets.filter((t) => t.status === "open").length,
+          };
+        });
+
+        setChartData(chartResult);
       } catch {
         console.log("Failed to load data");
       } finally {
