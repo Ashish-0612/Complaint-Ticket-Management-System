@@ -13,6 +13,7 @@ import AgentPanel from "./pages/Agent/AgentPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketDetail from "./pages/User/TicketDetail";
 import Profile from "./pages/Profile/Profile";
+import UserManagement from "./pages/Admin/UserManagement";
 
 function App() {
   return (
@@ -68,6 +69,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <UserManagement />
               </ProtectedRoute>
             }
           />
