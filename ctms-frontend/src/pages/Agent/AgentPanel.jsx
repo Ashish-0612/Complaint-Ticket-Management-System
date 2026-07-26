@@ -119,11 +119,11 @@ const AgentPanel = () => {
   ].filter((d) => d.value > 0);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Ticket, label: "Assigned Complaints" },
-    { icon: CheckCircle, label: "All Complaints" },
-    { icon: Activity, label: "My Activity" },
-    { icon: UserCog, label: "Profile" },
+    { icon: LayoutDashboard, label: "Dashboard", active: true, path: "/agent" },
+    { icon: Ticket, label: "Assigned Complaints", path: "/agent" },
+    { icon: CheckCircle, label: "All Complaints", path: "/agent" },
+    { icon: Activity, label: "My Activity", path: "/agent" },
+    { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
   return (
@@ -154,6 +154,7 @@ const AgentPanel = () => {
             {navItems.map((item, i) => (
               <li key={i}>
                 <button
+                  onClick={() => navigate(item.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                     item.active
                       ? "bg-green-600 text-white"

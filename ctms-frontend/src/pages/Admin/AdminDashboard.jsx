@@ -151,13 +151,14 @@ const AdminDashboard = () => {
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Users, label: "Users" },
-    { icon: UserCog, label: "Agents" },
-    { icon: Tag, label: "Categories" },
-    { icon: Ticket, label: "Complaints" },
-    { icon: BarChart3, label: "Reports" },
-    { icon: Settings, label: "Settings" },
+    { icon: LayoutDashboard, label: "Dashboard", active: true, path: "/admin" },
+    { icon: Users, label: "Users", path: "/admin" },
+    { icon: UserCog, label: "Agents", path: "/admin" },
+    { icon: Tag, label: "Categories", path: "/admin" },
+    { icon: Ticket, label: "Complaints", path: "/admin" },
+    { icon: BarChart3, label: "Reports", path: "/admin" },
+    { icon: Settings, label: "Settings", path: "/admin" },
+    { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
   return (
@@ -188,7 +189,8 @@ const AdminDashboard = () => {
             {navItems.map((item, i) => (
               <li key={i}>
                 <button
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                     item.active
                       ? "bg-blue-600 text-white"
                       : "text-gray-400 hover:bg-gray-800 hover:text-white"
