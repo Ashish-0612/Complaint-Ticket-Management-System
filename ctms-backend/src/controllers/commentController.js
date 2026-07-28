@@ -52,6 +52,17 @@ const addComment = async (req, res) => {
       isInternal: isInternal || false
     })
 
+    // Author ke saath fetch karo
+    const commentWithAuthor = await Comment.findByPk(newComment.id, {
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'name', 'role']
+        }
+      ]
+    })
+
     // Log this activity
     await ActivityLog.create({
       ticketId,

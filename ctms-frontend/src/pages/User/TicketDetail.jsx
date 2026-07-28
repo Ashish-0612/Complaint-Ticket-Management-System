@@ -33,6 +33,7 @@ const TicketDetail = () => {
   const [error, setError] = useState("");
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+  const [activityLogs, setActivityLogs] = useState([]);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -60,6 +61,18 @@ const TicketDetail = () => {
     fetchComments();
   }, [id]);
 
+  useEffect(() => {
+    const fetchActivityLogs = async () => {
+      try {
+        const res = await API.get(`/tickets/${id}/comments/logs`);
+        setActivityLogs(res.data.data);
+      } catch {
+        setActivityLogs([]);
+      }
+    };
+    fetchActivityLogs();
+  }, [id]);
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -68,8 +81,23 @@ const TicketDetail = () => {
       const res = await API.post(`/tickets/${id}/comments`, {
         comment: newComment,
       });
-      setComments([...comments, res.data.data]);
+
+      // Author manually add karo — refresh ki zaroorat nahi!
+      const commentWithUser = {
+        ...res.data.data,
+        author: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+        },
+      };
+
+      setComments([...comments, commentWithUser]);
       setNewComment("");
+
+      // Activity log bhi refresh karo
+      const logsRes = await API.get(`/tickets/${id}/comments/logs`);
+      setActivityLogs(logsRes.data.data);
     } catch {
       alert("Failed to add comment!");
     } finally {
@@ -458,6 +486,54 @@ const TicketDetail = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+            {/* Activity Log Section */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                <Activity size={18} className="text-gray-600" />
+                <h3 className="font-bold text-gray-800">Activity Log</h3>
+                <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
+                  {activityLogs.length}
+                </span>
+              </div>
+
+              <div className="p-5">
+                {activityLogs.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Activity
+                      size={28}
+                      className="text-gray-200 mx-auto mb-2"
+                    />
+                    <p className="text-gray-400 text-sm">No activity yet!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activityLogs.map((log, index) => (
+                      <div key={log.id} className="flex gap-3">
+                        {/* Timeline line */}
+                        <div className="flex flex-col items-center">
+                          <div className="w-7 h-7 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0">
+                            <Activity size={12} className="text-blue-600" />
+                          </div>
+                          {index < activityLogs.length - 1 && (
+                            <div className="w-0.5 h-full bg-gray-100 mt-1"></div>
+                          )}
+                        </div>
+                        {/* Log content */}
+                        <div className="flex-1 pb-3">
+                          <p className="text-sm text-gray-700 font-medium">
+                            {log.details}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {new Date(log.createdAt).toLocaleDateString()} —{" "}
+                            {new Date(log.createdAt).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

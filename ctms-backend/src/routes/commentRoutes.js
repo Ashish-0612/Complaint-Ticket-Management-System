@@ -22,6 +22,6 @@ router.post('/', protect, addComment)
 router.delete('/:id', protect, authorize('admin'), deleteComment)
 
 // GET activity logs for ticket
-router.get('/logs', protect, authorize('admin', 'agent'), getActivityLogs)
+router.get('/logs', protect, getActivityLogs)
 
 module.exports = router
