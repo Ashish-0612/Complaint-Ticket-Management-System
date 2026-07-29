@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TicketDetail from "./pages/User/TicketDetail";
 import Profile from "./pages/Profile/Profile";
 import UserManagement from "./pages/Admin/UserManagement";
+import DepartmentManagement from "./pages/Admin/DepartmentManagement";
 
 function App() {
   return (
@@ -78,6 +79,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/departments"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <DepartmentManagement />
               </ProtectedRoute>
             }
           />

@@ -185,7 +185,7 @@ const AdminDashboard = () => {
     { icon: Users, label: "Users", path: "/admin/users" },
     { icon: UserCog, label: "Agents", path: "/admin" },
     { icon: Tag, label: "Categories", path: "/admin" },
-    { icon: Ticket, label: "Complaints", path: "/admin" },
+    { icon: Tag, label: "Departments", path: "/admin/departments" },
     { icon: BarChart3, label: "Reports", path: "/admin" },
     { icon: Settings, label: "Settings", path: "/admin" },
     { icon: UserCog, label: "Profile", path: "/profile" },
