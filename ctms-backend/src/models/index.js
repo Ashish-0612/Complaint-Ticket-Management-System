@@ -12,16 +12,18 @@ const Attachment = require('./Attachment')
 // User has many Tickets
 // One user can create many tickets
 User.hasMany(Ticket, {
-  foreignKey: 'userId',
-  as: 'tickets'
-})
+  foreignKey: "userId",
+  as: "tickets",
+  constraints: false,
+});
 
 // Ticket belongs to User
 // Each ticket has one creator
 Ticket.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'creator'
-})
+  foreignKey: "userId",
+  as: "creator",
+  constraints: false,
+});
 
 // Department has many Categories
 // IT Support has Hardware, Software, Network
@@ -38,27 +40,30 @@ Category.belongsTo(Department, {
 
 // Department has many Tickets
 Department.hasMany(Ticket, {
-  foreignKey: 'departmentId',
-  as: 'tickets'
-})
+  foreignKey: "departmentId",
+  as: "tickets",
+  constraints: "NO ACTION",
+});
 
 // Ticket belongs to Department
 Ticket.belongsTo(Department, {
-  foreignKey: 'departmentId',
-  as: 'department'
-})
+  foreignKey: "departmentId",
+  as: "department",
+  constraints: "NO ACTION",
+});
 
 // Category has many Tickets
 Category.hasMany(Ticket, {
-  foreignKey: 'categoryId',
-  as: 'tickets'
-})
+  foreignKey: "categoryId",
+  as: "tickets",
+  constraints: false,
+});
 
-// Ticket belongs to Category
 Ticket.belongsTo(Category, {
-  foreignKey: 'categoryId',
-  as: 'category'
-})
+  foreignKey: "categoryId",
+  as: "category",
+  constraints: false,
+});
 
 // Agent (User) has many assigned Tickets
 User.hasMany(Ticket, {

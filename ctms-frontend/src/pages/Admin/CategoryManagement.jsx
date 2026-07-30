@@ -20,29 +20,35 @@ import {
   X,
 } from "lucide-react";
 
-const DepartmentManagement = () => {
+const CategoryManagement = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const [categories, setCategories] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingDept, setEditingDept] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [editingCat, setEditingCat] = useState(null);
+  const [formData, setFormData] = useState({ name: "", departmentId: "" });
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [filterDept, setFilterDept] = useState("all");
 
   useEffect(() => {
-    fetchDepartments();
+    fetchData();
   }, []);
 
-  const fetchDepartments = async () => {
+  const fetchData = async () => {
     try {
-      const res = await API.get("/departments");
-      setDepartments(res.data.data);
+      const [catsRes, deptsRes] = await Promise.all([
+        API.get("/categories"),
+        API.get("/departments"),
+      ]);
+      setCategories(catsRes.data.data);
+      setDepartments(deptsRes.data.data);
     } catch {
-      console.log("Failed to load departments");
+      console.log("Failed to load");
     } finally {
       setLoading(false);
     }
@@ -60,19 +66,17 @@ const DepartmentManagement = () => {
     setSuccess("");
 
     try {
-      if (editingDept) {
-        // Update
-        await API.put(`/departments/${editingDept.id}`, formData);
-        setSuccess("Department updated successfully!");
+      if (editingCat) {
+        await API.put(`/categories/${editingCat.id}`, formData);
+        setSuccess("Category updated successfully!");
       } else {
-        // Create
-        await API.post("/departments", formData);
-        setSuccess("Department created successfully!");
+        await API.post("/categories", formData);
+        setSuccess("Category created successfully!");
       }
-      fetchDepartments();
-      setFormData({ name: "", description: "" });
+      fetchData();
+      setFormData({ name: "", departmentId: "" });
       setShowAddForm(false);
-      setEditingDept(null);
+      setEditingCat(null);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed!");
@@ -81,35 +85,35 @@ const DepartmentManagement = () => {
     }
   };
 
-  const handleEdit = (dept) => {
-    setEditingDept(dept);
-    setFormData({ name: dept.name, description: dept.description || "" });
+  const handleEdit = (cat) => {
+    setEditingCat(cat);
+    setFormData({ name: cat.name, departmentId: cat.departmentId });
     setShowAddForm(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this department?"))
+    if (!window.confirm("Are you sure you want to delete this category?"))
       return;
     try {
-      await API.delete(`/departments/${id}`);
-      setSuccess("Department deleted!");
-      fetchDepartments();
+      await API.delete(`/categories/${id}`);
+      setSuccess("Category deleted!");
+      fetchData();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete!");
     }
   };
 
+  const filteredCategories = categories.filter(
+    (cat) => filterDept === "all" || cat.departmentId === parseInt(filterDept),
+  );
+
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
     { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
-    {
-      icon: Tag,
-      label: "Departments",
-      path: "/admin/departments",
-      active: true,
-    },
+    { icon: Tag, label: "Departments", path: "/admin/departments" },
+    { icon: Tag, label: "Categories", path: "/admin/categories", active: true },
     { icon: Ticket, label: "Complaints", path: "/admin" },
     { icon: BarChart3, label: "Reports", path: "/admin" },
     { icon: Settings, label: "Settings", path: "/admin" },
@@ -184,21 +188,21 @@ const DepartmentManagement = () => {
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div>
             <h1 className="text-xl font-bold text-gray-800">
-              Department Management
+              Category Management
             </h1>
-            <p className="text-gray-500 text-sm">Manage all departments</p>
+            <p className="text-gray-500 text-sm">Manage all categories</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 setShowAddForm(true);
-                setEditingDept(null);
-                setFormData({ name: "", description: "" });
+                setEditingCat(null);
+                setFormData({ name: "", departmentId: "" });
               }}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all"
             >
               <Plus size={16} />
-              Add Department
+              Add Category
             </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
               <Bell size={18} />
@@ -226,12 +230,12 @@ const DepartmentManagement = () => {
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-800">
-                  {editingDept ? "Edit Department" : "Add New Department"}
+                  {editingCat ? "Edit Category" : "Add New Category"}
                 </h3>
                 <button
                   onClick={() => {
                     setShowAddForm(false);
-                    setEditingDept(null);
+                    setEditingCat(null);
                   }}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
@@ -242,7 +246,7 @@ const DepartmentManagement = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
-                    Department Name <span className="text-red-500">*</span>
+                    Category Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -250,7 +254,7 @@ const DepartmentManagement = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="e.g. IT Support"
+                    placeholder="e.g. Hardware"
                     required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all"
                   />
@@ -258,17 +262,23 @@ const DepartmentManagement = () => {
 
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
-                    Description
+                    Department <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    value={formData.description}
+                  <select
+                    value={formData.departmentId}
                     onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
+                      setFormData({ ...formData, departmentId: e.target.value })
                     }
-                    placeholder="Brief description of this department"
-                    rows={3}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all resize-none"
-                  />
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all cursor-pointer"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex gap-3">
@@ -279,17 +289,17 @@ const DepartmentManagement = () => {
                   >
                     {submitLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : editingDept ? (
-                      "Update Department"
+                    ) : editingCat ? (
+                      "Update Category"
                     ) : (
-                      "Add Department"
+                      "Add Category"
                     )}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowAddForm(false);
-                      setEditingDept(null);
+                      setEditingCat(null);
                     }}
                     className="px-6 py-3 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all cursor-pointer text-sm"
                   >
@@ -300,20 +310,39 @@ const DepartmentManagement = () => {
             </div>
           )}
 
-          {/* Departments Table */}
+          {/* Filter */}
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm font-medium text-gray-700">
+              Filter by Department:
+            </label>
+            <select
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 bg-white cursor-pointer"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Categories Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800">All Departments</h3>
+              <h3 className="font-bold text-gray-800">All Categories</h3>
               <p className="text-gray-500 text-xs mt-0.5">
-                {departments.length} departments
+                {filteredCategories.length} categories
               </p>
             </div>
 
             {/* Table Header */}
             <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <div className="col-span-1">ID</div>
-              <div className="col-span-2">Department</div>
-              <div className="col-span-1">Status</div>
+              <div className="col-span-2">Category</div>
+              <div className="col-span-1">Department</div>
               <div className="col-span-1">Actions</div>
             </div>
 
@@ -324,53 +353,45 @@ const DepartmentManagement = () => {
               </div>
             )}
 
-            {!loading && departments.length === 0 && (
+            {!loading && filteredCategories.length === 0 && (
               <div className="text-center py-12">
                 <Tag size={40} className="text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No departments found</p>
+                <p className="text-gray-500 text-sm">No categories found</p>
               </div>
             )}
 
             {!loading &&
-              departments.map((dept) => (
+              filteredCategories.map((cat) => (
                 <div
-                  key={dept.id}
+                  key={cat.id}
                   className="grid grid-cols-5 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
                 >
                   <div className="col-span-1 text-xs text-gray-400 font-mono">
-                    #{dept.id}
+                    #{cat.id}
                   </div>
 
                   <div className="col-span-2">
                     <p className="text-sm font-semibold text-gray-800">
-                      {dept.name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {dept.description || "No description"}
+                      {cat.name}
                     </p>
                   </div>
 
                   <div className="col-span-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                        dept.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {dept.isActive ? "Active" : "Inactive"}
+                    <span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-medium">
+                      {departments.find((d) => d.id === cat.departmentId)
+                        ?.name || "Unknown"}
                     </span>
                   </div>
 
                   <div className="col-span-1 flex gap-2">
                     <button
-                      onClick={() => handleEdit(dept)}
+                      onClick={() => handleEdit(cat)}
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-all"
                     >
                       <Edit2 size={15} />
                     </button>
                     <button
-                      onClick={() => handleDelete(dept.id)}
+                      onClick={() => handleDelete(cat.id)}
                       className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all"
                     >
                       <Trash2 size={15} />
@@ -385,4 +406,4 @@ const DepartmentManagement = () => {
   );
 };
 
-export default DepartmentManagement;
+export default CategoryManagement;

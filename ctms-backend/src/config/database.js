@@ -1,27 +1,33 @@
-// Import Sequelize
-const { Sequelize } = require('sequelize')
+const { Sequelize } = require("sequelize");
+const tedious = require("tedious");
 
-// Create connection to MySQL database
 const sequelize = new Sequelize(
-  process.env.DB_NAME,      // database name → ctms_db
-  process.env.DB_USER,      // username → root
-  process.env.DB_PASSWORD,  // password → empty
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
   {
-    host: process.env.DB_HOST,  // localhost
-    dialect: 'mysql',           // we are using MySQL
-    logging: false              // hide SQL logs in terminal
-  }
-)
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    dialect: "mssql",
+    dialectModule: tedious,
+    logging: false,
+    dialectOptions: {
+      options: {
+        encrypt: false,
+        trustServerCertificate: true,
+      },
+    },
+  },
+);
 
-// Test the connection
 const connectDB = async () => {
   try {
-    await sequelize.authenticate()
-    console.log('✅ MySQL Database connected successfully!')
+    await sequelize.authenticate();
+    console.log("✅ SQL Server connected successfully!");
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message)
-    process.exit(1)
+    console.error("❌ Database connection failed:", error);
+    process.exit(1);
   }
-}
+};
 
-module.exports = { sequelize, connectDB }
+module.exports = { sequelize, connectDB };

@@ -10,11 +10,13 @@ import Dashboard from "./pages/User/Dashboard";
 import CreateTicket from "./pages/User/CreateTicket";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AgentPanel from "./pages/Agent/AgentPanel";
+import AgentPerformance from "./pages/Admin/AgentPerformance";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketDetail from "./pages/User/TicketDetail";
 import Profile from "./pages/Profile/Profile";
 import UserManagement from "./pages/Admin/UserManagement";
 import DepartmentManagement from "./pages/Admin/DepartmentManagement";
+import CategoryManagement from "./pages/Admin/CategoryManagement";
 
 function App() {
   return (
@@ -75,6 +77,15 @@ function App() {
           />
 
           <Route
+            path="/admin/agents/performance"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AgentPerformance />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admin/users"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
@@ -88,6 +99,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <DepartmentManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/categories"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <CategoryManagement />
               </ProtectedRoute>
             }
           />

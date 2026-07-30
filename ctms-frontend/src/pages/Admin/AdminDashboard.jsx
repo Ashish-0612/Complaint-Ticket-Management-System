@@ -183,8 +183,8 @@ const AdminDashboard = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true, path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: UserCog, label: "Agents", path: "/admin" },
-    { icon: Tag, label: "Categories", path: "/admin" },
+    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
+    { icon: Tag, label: "Categories", path: "/admin/categories" },
     { icon: Tag, label: "Departments", path: "/admin/departments" },
     { icon: BarChart3, label: "Reports", path: "/admin" },
     { icon: Settings, label: "Settings", path: "/admin" },
