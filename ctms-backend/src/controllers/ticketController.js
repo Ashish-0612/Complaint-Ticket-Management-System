@@ -273,6 +273,72 @@ const updateTicket = async (req, res) => {
   }
 };
 
+// ========== REOPEN TICKET ==========
+const reopenTicket = async (req, res) => {
+  try {
+    const ticket = await Ticket.findByPk(req.params.id)
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: `Ticket with id ${req.params.id} not found`
+      })
+    }
+
+    const canReopen =
+      req.user.role === 'admin' ||
+      req.user.role === 'agent' ||
+      ticket.userId === req.user.id
+
+    if (!canReopen) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to reopen this ticket'
+      })
+    }
+
+    if (!['resolved', 'closed'].includes(ticket.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Only resolved or closed tickets can be reopened'
+      })
+    }
+
+    const previousStatus = ticket.status
+    await ticket.update({ status: 'reopened' })
+
+    await ActivityLog.create({
+      ticketId: ticket.id,
+      userId: req.user.id,
+      action: 'Ticket reopened',
+      details: `Status changed from ${previousStatus} to reopened`
+    })
+
+    const creator = await User.findByPk(ticket.userId)
+    let emailPreview = null
+    if (creator) {
+      const emailResult = await sendEmail({
+        to: creator.email,
+        subject: `Ticket #${ticket.id} Reopened`,
+        html: ticketUpdatedEmail(creator.name, ticket.id, ticket.title, ticket.status)
+      })
+      emailPreview = emailResult?.preview || null
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Ticket ${ticket.id} reopened successfully!`,
+      data: ticket,
+      emailPreview
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
 // ========== DELETE TICKET ==========
 const deleteTicket = async (req, res) => {
   try {
@@ -318,5 +384,6 @@ module.exports = {
   getTicketById,
   createTicket,
   updateTicket,
+  reopenTicket,
   deleteTicket
 }

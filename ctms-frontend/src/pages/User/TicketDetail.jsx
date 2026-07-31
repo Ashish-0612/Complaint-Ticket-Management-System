@@ -22,6 +22,7 @@ import {
   UserCog,
   BarChart3,
   Settings,
+  RotateCcw,
 } from "lucide-react";
 
 const TicketDetail = () => {
@@ -40,6 +41,7 @@ const TicketDetail = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState("");
+  const [reopenLoading, setReopenLoading] = useState(false);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -185,6 +187,25 @@ const TicketDetail = () => {
     navigate("/login");
   };
 
+  const handleReopen = async () => {
+    setReopenLoading(true);
+    setError("");
+    try {
+      const res = await API.post(`/tickets/${id}/reopen`);
+      setTicket((currentTicket) => ({
+        ...currentTicket,
+        ...res.data.data,
+        status: "reopened",
+      }));
+      const logsRes = await API.get(`/tickets/${id}/comments/logs`);
+      setActivityLogs(logsRes.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to reopen ticket.");
+    } finally {
+      setReopenLoading(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "open":
@@ -195,6 +216,8 @@ const TicketDetail = () => {
         return "bg-green-100 text-green-700 border border-green-200";
       case "closed":
         return "bg-gray-100 text-gray-600 border border-gray-200";
+      case "reopened":
+        return "bg-orange-100 text-orange-700 border border-orange-200";
       default:
         return "bg-gray-100 text-gray-600";
     }
@@ -406,6 +429,20 @@ const TicketDetail = () => {
                   >
                     {ticket?.priority}
                   </span>
+                  {(ticket?.status === "resolved" || ticket?.status === "closed") &&
+                    (user?.role === "admin" ||
+                      user?.role === "agent" ||
+                      ticket?.creator?.id === user?.id) && (
+                      <button
+                        type="button"
+                        onClick={handleReopen}
+                        disabled={reopenLoading}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-orange-700 border border-orange-200 hover:bg-orange-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        <RotateCcw size={12} />
+                        {reopenLoading ? "Reopening..." : "Reopen Ticket"}
+                      </button>
+                    )}
                 </div>
               </div>
 

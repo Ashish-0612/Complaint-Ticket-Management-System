@@ -185,7 +185,7 @@ const AdminDashboard = () => {
       filterPriority === "all" || t.priority === filterPriority;
     return matchSearch && matchStatus && matchPriority;
   });
-  const ticketsPerPage = 10;
+  const ticketsPerPage = 5;
   const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedTickets = filteredTickets.slice(
@@ -209,6 +209,7 @@ const AdminDashboard = () => {
       "in-progress": "bg-yellow-100 text-yellow-700",
       resolved: "bg-green-100 text-green-700",
       closed: "bg-gray-100 text-gray-600",
+      reopened: "bg-orange-100 text-orange-700",
     };
     return styles[status] || "bg-gray-100 text-gray-600";
   };
@@ -553,6 +554,7 @@ const AdminDashboard = () => {
                       <option value="in-progress">In Progress</option>
                       <option value="resolved">Resolved</option>
                       <option value="closed">Closed</option>
+                      <option value="reopened">Reopened</option>
                     </select>
                   </div>
                   <select

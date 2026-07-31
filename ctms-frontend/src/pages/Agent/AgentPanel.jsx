@@ -98,7 +98,7 @@ const AgentPanel = () => {
     const matchesPriority = filterPriority === "all" || ticket.priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
-  const ticketsPerPage = 10;
+  const ticketsPerPage = 5;
   const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedTickets = filteredTickets.slice(
@@ -126,6 +126,8 @@ const AgentPanel = () => {
         return "bg-green-100 text-green-700";
       case "closed":
         return "bg-gray-100 text-gray-600";
+      case "reopened":
+        return "bg-orange-100 text-orange-700";
       default:
         return "bg-gray-100 text-gray-600";
     }
@@ -360,6 +362,7 @@ const AgentPanel = () => {
                       <option value="in-progress">In Progress</option>
                       <option value="resolved">Resolved</option>
                       <option value="closed">Closed</option>
+                      <option value="reopened">Reopened</option>
                     </select>
                   </div>
                   <select
