@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import Pagination from "../../components/Pagination";
 import {
   LayoutDashboard,
   Users,
@@ -41,6 +42,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -65,7 +68,7 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       try {
         const [ticketsRes, agentsRes] = await Promise.all([
-          API.get("/tickets"),
+          API.get("/tickets", { params: { limit: 1000 } }),
           API.get("/users/agents"),
         ]);
         const allTickets = ticketsRes.data.data;
@@ -171,12 +174,34 @@ const AdminDashboard = () => {
   };
 
   const filteredTickets = tickets.filter((t) => {
+    const searchValue = searchQuery.toLowerCase().trim();
     const matchSearch =
-      t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.creator?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      t.title?.toLowerCase().includes(searchValue) ||
+      t.description?.toLowerCase().includes(searchValue) ||
+      t.creator?.name?.toLowerCase().includes(searchValue) ||
+      t.department?.name?.toLowerCase().includes(searchValue);
     const matchStatus = filterStatus === "all" || t.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchPriority =
+      filterPriority === "all" || t.priority === filterPriority;
+    return matchSearch && matchStatus && matchPriority;
   });
+  const ticketsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTickets = filteredTickets.slice(
+    (safeCurrentPage - 1) * ticketsPerPage,
+    safeCurrentPage * ticketsPerPage,
+  );
+
+  const hasActiveFilters =
+    searchQuery.trim() || filterStatus !== "all" || filterPriority !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterStatus("all");
+    setFilterPriority("all");
+    setCurrentPage(1);
+  };
 
   const getStatusBadge = (status) => {
     const styles = {
@@ -493,7 +518,7 @@ const AdminDashboard = () => {
                     {filteredTickets.length} complaints found
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <div className="relative">
                     <Search
                       size={14}
@@ -503,7 +528,10 @@ const AdminDashboard = () => {
                       type="text"
                       placeholder="Search..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-48"
                     />
                   </div>
@@ -514,7 +542,10 @@ const AdminDashboard = () => {
                     />
                     <select
                       value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
+                      onChange={(e) => {
+                        setFilterStatus(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer appearance-none"
                     >
                       <option value="all">All Status</option>
@@ -524,6 +555,30 @@ const AdminDashboard = () => {
                       <option value="closed">Closed</option>
                     </select>
                   </div>
+                  <select
+                    value={filterPriority}
+                    onChange={(e) => {
+                      setFilterPriority(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    aria-label="Filter complaints by priority"
+                    className="px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                  >
+                    <option value="all">All Priority</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -556,7 +611,7 @@ const AdminDashboard = () => {
 
             {/* Rows */}
             {!loading &&
-              filteredTickets.map((ticket) => (
+              paginatedTickets.map((ticket) => (
                 <div
                   key={`${ticket.id}-${ticket.agentId}`}
                   className="grid grid-cols-7 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
@@ -636,6 +691,11 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               ))}
+            <Pagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>

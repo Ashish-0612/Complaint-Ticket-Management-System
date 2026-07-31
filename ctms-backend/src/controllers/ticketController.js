@@ -1,4 +1,5 @@
 // Import models
+const { Op } = require('sequelize')
 const { Ticket, User, Department, Category, Comment, ActivityLog, Attachment } = require('../models/index')
 const { sendEmail, ticketCreatedEmail, ticketResolvedEmail, ticketUpdatedEmail } = require('../config/email')
 const fs = require('fs').promises

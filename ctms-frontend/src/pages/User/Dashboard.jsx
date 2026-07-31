@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
+import Pagination from "../../components/Pagination";
 import {
   LayoutDashboard,
   Ticket,
@@ -11,7 +12,8 @@ import {
   Clock,
   AlertCircle,
   LogOut,
-  Search, 
+  Search,
+  Filter,
   FileText,
   Activity,
 } from "lucide-react";
@@ -23,6 +25,9 @@ const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -33,7 +38,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const res = await API.get("/tickets");
+        const res = await API.get("/tickets", { params: { limit: 1000 } });
         const myTickets = res.data.data;
         setTickets(myTickets);
         setStats({
@@ -57,9 +62,33 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  const filteredTickets = tickets.filter((t) =>
-    t.title?.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredTickets = tickets.filter((t) => {
+    const searchValue = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      t.title?.toLowerCase().includes(searchValue) ||
+      t.description?.toLowerCase().includes(searchValue) ||
+      t.department?.name?.toLowerCase().includes(searchValue);
+    const matchesStatus = filterStatus === "all" || t.status === filterStatus;
+    const matchesPriority = filterPriority === "all" || t.priority === filterPriority;
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+  const ticketsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTickets = filteredTickets.slice(
+    (safeCurrentPage - 1) * ticketsPerPage,
+    safeCurrentPage * ticketsPerPage,
   );
+
+  const hasActiveFilters =
+    searchQuery.trim() || filterStatus !== "all" || filterPriority !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterStatus("all");
+    setFilterPriority("all");
+    setCurrentPage(1);
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -274,7 +303,7 @@ const Dashboard = () => {
                     {filteredTickets.length} complaints found
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <div className="relative">
                     <Search
                       size={13}
@@ -284,10 +313,57 @@ const Dashboard = () => {
                       type="text"
                       placeholder="Search..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-36"
                     />
                   </div>
+                  <div className="relative">
+                    <Filter
+                      size={13}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => {
+                        setFilterStatus(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="open">Open</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
+                  <select
+                    value={filterPriority}
+                    onChange={(e) => {
+                      setFilterPriority(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    aria-label="Filter complaints by priority"
+                    className="px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                  >
+                    <option value="all">All Priority</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate("/create-ticket")}
                     className="text-blue-600 text-xs font-medium hover:underline cursor-pointer"
@@ -331,7 +407,7 @@ const Dashboard = () => {
               )}
 
               {!loading &&
-                filteredTickets.map((ticket) => (
+                paginatedTickets.map((ticket) => (
                   <div
                     key={ticket.id}
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
@@ -360,6 +436,11 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ))}
+              <Pagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
 
             {/* Right Side */}
