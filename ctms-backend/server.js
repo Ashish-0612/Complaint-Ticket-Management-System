@@ -22,6 +22,7 @@ const userRoutes = require("./src/routes/userRoutes");
 
 // Step 2 — Import express package
 const express = require('express')
+const path = require('path')
 
 // Step 3 — Import cors package
 const cors = require('cors')
@@ -46,7 +47,7 @@ const app = express()
 app.use(helmet())
 
 // Serve uploaded files statically
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')))
 
 // ========== RATE LIMITING ==========
 const limiter = rateLimit({

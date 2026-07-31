@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
@@ -33,6 +33,7 @@ const CreateTicket = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [attachment, setAttachment] = useState(null);
+  const attachmentInputRef = useRef(null);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -67,6 +68,7 @@ const CreateTicket = () => {
   };
 
   const handleAttachmentChange = (e) => {
+    const scrollPosition = Number(e.currentTarget.dataset.scrollPosition || 0);
     const selectedFile = e.target.files?.[0] || null;
     if (!selectedFile) {
       setAttachment(null);
@@ -90,10 +92,24 @@ const CreateTicket = () => {
 
     setAttachment(selectedFile);
     setError("");
+    requestAnimationFrame(() => window.scrollTo(0, scrollPosition));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.title.trim().length < 5) {
+      setError("Title must be at least 5 characters.");
+      return;
+    }
+    if (formData.description.trim().length < 10) {
+      setError("Description must be at least 10 characters.");
+      return;
+    }
+    if (!formData.departmentId) {
+      setError("Please select a department.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -111,7 +127,14 @@ const CreateTicket = () => {
       setSuccess(true);
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create complaint or upload attachment!");
+      const validationErrors = err.response?.data?.errors
+        ?.map((validationError) => validationError.message)
+        .join(" ");
+      setError(
+        validationErrors ||
+          err.response?.data?.message ||
+          "Failed to create complaint or upload attachment!",
+      );
     } finally {
       setLoading(false);
     }
@@ -392,22 +415,31 @@ const CreateTicket = () => {
                 <p className="text-gray-500 text-xs mb-4">
                   Optional. Images and documents up to 5 MB.
                 </p>
-                <label className="flex min-w-0 items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-4 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
+                <label className="relative flex min-w-0 items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-4 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
                   <Paperclip size={18} className="text-blue-600" />
                   <span className="truncate">
                     {attachment ? attachment.name : "Choose a file"}
                   </span>
                   <input
+                    ref={attachmentInputRef}
                     type="file"
                     accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
+                    onClick={(event) => {
+                      event.currentTarget.dataset.scrollPosition = window.scrollY;
+                    }}
                     onChange={handleAttachmentChange}
-                    className="sr-only"
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                   />
                 </label>
                 {attachment && (
                   <button
                     type="button"
-                    onClick={() => setAttachment(null)}
+                    onClick={() => {
+                      setAttachment(null);
+                      if (attachmentInputRef.current) {
+                        attachmentInputRef.current.value = "";
+                      }
+                    }}
                     className="mt-3 flex items-center gap-2 text-sm text-red-500 hover:text-red-600 cursor-pointer"
                   >
                     <Trash2 size={15} />

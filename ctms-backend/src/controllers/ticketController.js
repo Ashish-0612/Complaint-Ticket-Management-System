@@ -4,6 +4,17 @@ const { Ticket, User, Department, Category, Comment, ActivityLog, Attachment } =
 const { sendEmail, ticketCreatedEmail, ticketResolvedEmail, ticketUpdatedEmail } = require('../config/email')
 const fs = require('fs').promises
 
+const getSlaDays = (priority) => {
+  const slaDays = { critical: 1, high: 2, medium: 3, low: 5 }
+  return slaDays[priority] || slaDays.medium
+}
+
+const getDefaultDueDate = (priority) => {
+  const dueDate = new Date()
+  dueDate.setDate(dueDate.getDate() + getSlaDays(priority))
+  return dueDate
+}
+
 // ========== GET ALL TICKETS ==========
   // GET ALL TICKETS
 const getAllTickets = async (req, res) => {
@@ -137,7 +148,7 @@ const getTicketById = async (req, res) => {
 // ========== CREATE TICKET ==========
 const createTicket = async (req, res) => {
   try {
-    const { title, description, priority, departmentId, categoryId } = req.body
+    const { title, description, priority, departmentId, categoryId, dueDate } = req.body
 
     // Validate required fields
     if (!title) {
@@ -166,6 +177,7 @@ const createTicket = async (req, res) => {
       title,
       description,
       priority: priority || 'medium',
+      dueDate: dueDate || getDefaultDueDate(priority || 'medium'),
       status: 'open',
       userId: req.user.id,        // hardcoded for now — later from JWT!
       departmentId,
@@ -198,7 +210,7 @@ const createTicket = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, status, priority, agentId } = req.body; // ← agentId add karo
+    const { title, status, priority, agentId, dueDate } = req.body; // ← agentId add karo
 
     const ticket = await Ticket.findByPk(id);
 
@@ -218,6 +230,7 @@ const updateTicket = async (req, res) => {
       status: status || ticket.status,
       priority: priority || ticket.priority,
       agentId: agentId !== undefined ? agentId : ticket.agentId,
+      dueDate: dueDate !== undefined ? dueDate : ticket.dueDate,
     });
 
     // Fetch creator and agent details for notifications

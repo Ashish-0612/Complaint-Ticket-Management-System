@@ -13,6 +13,7 @@ import {
   Clock,
   User,
   Calendar,
+  CalendarClock,
   Tag,
   MessageSquare,
   Send,
@@ -42,6 +43,7 @@ const TicketDetail = () => {
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState("");
   const [reopenLoading, setReopenLoading] = useState(false);
+  const [currentTime] = useState(() => Date.now());
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -245,6 +247,18 @@ const TicketDetail = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const getDueDateState = () => {
+    if (!ticket?.dueDate) return { label: "Not set", overdue: false };
+
+    const dueDate = new Date(ticket.dueDate);
+    const isCompleted = ["resolved", "closed"].includes(ticket.status);
+    const overdue = !isCompleted && dueDate.getTime() < currentTime;
+    return {
+      label: dueDate.toLocaleDateString(),
+      overdue,
+    };
+  };
+
   // Role based sidebar
   const getSidebarColor = () => {
     if (user?.role === "agent") return "bg-green-600";
@@ -277,6 +291,8 @@ const TicketDetail = () => {
     if (user?.role === "agent") return "/agent";
     return "/dashboard";
   };
+
+  const dueDateState = getDueDateState();
 
   if (loading) {
     return (
@@ -518,6 +534,21 @@ const TicketDetail = () => {
                     <p className="text-xs text-gray-400">Last Updated</p>
                     <p className="text-xs font-semibold text-gray-700">
                       {new Date(ticket?.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                    <CalendarClock size={14} className="text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Due Date / SLA</p>
+                    <p
+                      className={`text-xs font-semibold ${dueDateState.overdue ? "text-red-600" : "text-gray-700"}`}
+                    >
+                      {dueDateState.overdue ? "Overdue · " : ""}
+                      {dueDateState.label}
                     </p>
                   </div>
                 </div>
