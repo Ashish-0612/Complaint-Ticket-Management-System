@@ -12,6 +12,8 @@ import {
   Bell,
   AlertCircle,
   CheckCircle,
+  Paperclip,
+  Trash2,
 } from "lucide-react";
 
 const CreateTicket = () => {
@@ -30,6 +32,7 @@ const CreateTicket = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [attachment, setAttachment] = useState(null);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -63,16 +66,52 @@ const CreateTicket = () => {
     setError("");
   };
 
+  const handleAttachmentChange = (e) => {
+    const selectedFile = e.target.files?.[0] || null;
+    if (!selectedFile) {
+      setAttachment(null);
+      return;
+    }
+
+    const allowedExtensions = /\.(jpe?g|png|gif|pdf|docx?)$/i;
+    if (!allowedExtensions.test(selectedFile.name)) {
+      setAttachment(null);
+      setError("Only JPG, PNG, GIF, PDF, DOC, and DOCX files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setAttachment(null);
+      setError("Attachment size must be 5 MB or less.");
+      e.target.value = "";
+      return;
+    }
+
+    setAttachment(selectedFile);
+    setError("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      await API.post("/tickets", formData);
+      const ticketResponse = await API.post("/tickets", formData);
+      const ticketId = ticketResponse.data.data.id;
+
+      if (attachment) {
+        const uploadData = new FormData();
+        uploadData.append("file", attachment);
+        await API.post(`/tickets/${ticketId}/attachments`, uploadData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
       setSuccess(true);
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create complaint!");
+      setError(err.response?.data?.message || "Failed to create complaint or upload attachment!");
     } finally {
       setLoading(false);
     }
@@ -138,7 +177,7 @@ const CreateTicket = () => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
+      <aside className="hidden md:flex fixed inset-y-0 left-0 z-20 h-screen w-56 bg-gray-900 flex-col">
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -199,9 +238,9 @@ const CreateTicket = () => {
       </aside>
 
       {/* ========== MAIN ========== */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="min-w-0 min-h-0 h-screen flex-1 flex flex-col overflow-hidden md:ml-56">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between gap-4 flex-shrink-0">
           <div>
             <h1 className="text-xl font-bold text-gray-800">New Complaint</h1>
             <p className="text-gray-500 text-sm">
@@ -216,7 +255,7 @@ const CreateTicket = () => {
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="hidden sm:inline text-sm font-medium text-gray-700">
                 {user?.name}
               </span>
             </div>
@@ -224,7 +263,7 @@ const CreateTicket = () => {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="min-w-0 min-h-0 flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
           <div className="max-w-3xl mx-auto">
             {/* Error */}
             {error && (
@@ -234,7 +273,7 @@ const CreateTicket = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5 pb-2">
               {/* Title */}
               <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4">
@@ -277,7 +316,7 @@ const CreateTicket = () => {
               {/* Priority */}
               <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-gray-800 mb-4">Priority Level</h3>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {priorities.map((p) => (
                     <button
                       key={p.value}
@@ -302,7 +341,7 @@ const CreateTicket = () => {
                 <h3 className="font-bold text-gray-800 mb-4">
                   Department & Category
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-gray-700 text-sm font-semibold mb-2">
                       Department <span className="text-red-500">*</span>
@@ -347,8 +386,38 @@ const CreateTicket = () => {
                 </div>
               </div>
 
+              {/* Attachment */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-800 mb-2">Attachment</h3>
+                <p className="text-gray-500 text-xs mb-4">
+                  Optional. Images and documents up to 5 MB.
+                </p>
+                <label className="flex min-w-0 items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-4 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
+                  <Paperclip size={18} className="text-blue-600" />
+                  <span className="truncate">
+                    {attachment ? attachment.name : "Choose a file"}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
+                    onChange={handleAttachmentChange}
+                    className="sr-only"
+                  />
+                </label>
+                {attachment && (
+                  <button
+                    type="button"
+                    onClick={() => setAttachment(null)}
+                    className="mt-3 flex items-center gap-2 text-sm text-red-500 hover:text-red-600 cursor-pointer"
+                  >
+                    <Trash2 size={15} />
+                    Remove selected file
+                  </button>
+                )}
+              </div>
+
               {/* Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}

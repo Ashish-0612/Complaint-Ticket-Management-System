@@ -8,7 +8,7 @@ const {
   upload
 } = require('../controllers/attachmentController')
 
-const { protect, authorize } = require('../middleware/authMiddleware')
+const { protect } = require('../middleware/authMiddleware')
 
 // ========== ATTACHMENT ROUTES ==========
 
@@ -19,6 +19,6 @@ router.get('/', protect, getAttachments)
 router.post('/', protect, upload.single('file'), uploadFile)
 
 // DELETE attachment → admin only
-router.delete('/:id', protect, authorize('admin'), deleteAttachment)
+router.delete('/:id', protect, deleteAttachment)
 
 module.exports = router

@@ -17,6 +17,8 @@ import {
   MessageSquare,
   Send,
   ArrowLeft,
+  Paperclip,
+  Trash2,
   UserCog,
   BarChart3,
   Settings,
@@ -34,6 +36,10 @@ const TicketDetail = () => {
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [activityLogs, setActivityLogs] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [attachmentError, setAttachmentError] = useState("");
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -73,6 +79,18 @@ const TicketDetail = () => {
     fetchActivityLogs();
   }, [id]);
 
+  useEffect(() => {
+    const fetchAttachments = async () => {
+      try {
+        const res = await API.get(`/tickets/${id}/attachments`);
+        setAttachments(res.data.data);
+      } catch {
+        setAttachments([]);
+      }
+    };
+    fetchAttachments();
+  }, [id]);
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -102,6 +120,63 @@ const TicketDetail = () => {
       alert("Failed to add comment!");
     } finally {
       setCommentLoading(false);
+    }
+  };
+
+  const handleCommentDelete = async (commentId) => {
+    try {
+      await API.delete(`/tickets/${id}/comments/${commentId}`);
+      setComments((currentComments) =>
+        currentComments.filter((comment) => comment.id !== commentId),
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete comment.");
+    }
+  };
+
+  const handleAttachmentUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setAttachmentError("File size must be 5 MB or less.");
+      return;
+    }
+
+    setAttachmentLoading(true);
+    setAttachmentError("");
+    try {
+      const uploadData = new FormData();
+      uploadData.append("file", selectedFile);
+      const res = await API.post(`/tickets/${id}/attachments`, uploadData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setAttachments((currentAttachments) => [
+        { ...res.data.data, uploadedBy: user },
+        ...currentAttachments,
+      ]);
+      setSelectedFile(null);
+      e.target.reset();
+    } catch (err) {
+      setAttachmentError(
+        err.response?.data?.message || "Failed to upload attachment.",
+      );
+    } finally {
+      setAttachmentLoading(false);
+    }
+  };
+
+  const handleAttachmentDelete = async (attachmentId) => {
+    try {
+      await API.delete(`/tickets/${id}/attachments/${attachmentId}`);
+      setAttachments((currentAttachments) =>
+        currentAttachments.filter((attachment) => attachment.id !== attachmentId),
+      );
+    } catch (err) {
+      setAttachmentError(
+        err.response?.data?.message || "Failed to delete attachment.",
+      );
     }
   };
 
@@ -138,6 +213,13 @@ const TicketDetail = () => {
       default:
         return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   // Role based sidebar
@@ -405,6 +487,101 @@ const TicketDetail = () => {
               </div>
             </div>
 
+            {/* Attachments Section */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                <Paperclip size={18} className="text-gray-600" />
+                <h3 className="font-bold text-gray-800">Attachments</h3>
+                <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
+                  {attachments.length}
+                </span>
+              </div>
+
+              <div className="p-5">
+                <form
+                  onSubmit={handleAttachmentUpload}
+                  className="flex flex-col sm:flex-row gap-3 mb-5"
+                >
+                  <label className="flex-1 flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
+                    <Paperclip size={18} className="text-blue-600 flex-shrink-0" />
+                    <span className="truncate">
+                      {selectedFile ? selectedFile.name : "Choose a file to attach"}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
+                      onChange={(event) => {
+                        setSelectedFile(event.target.files?.[0] || null);
+                        setAttachmentError("");
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={!selectedFile || attachmentLoading}
+                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 cursor-pointer"
+                  >
+                    {attachmentLoading ? "Uploading..." : "Upload"}
+                  </button>
+                </form>
+                <p className="text-xs text-gray-400 mb-4">
+                  Images and documents up to 5 MB.
+                </p>
+                {attachmentError && (
+                  <p className="text-sm text-red-500 mb-4">{attachmentError}</p>
+                )}
+
+                {attachments.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Paperclip size={28} className="text-gray-200 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">No attachments yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {attachments.map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-3 py-3"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Paperclip size={16} className="text-blue-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {attachment.originalName}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {formatFileSize(attachment.fileSize)} · {attachment.uploadedBy?.name || "Unknown"}
+                          </p>
+                        </div>
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 text-xs font-semibold hover:underline flex-shrink-0"
+                        >
+                          Open
+                        </a>
+                        {(user?.role === "admin" ||
+                          attachment.uploadedBy?.id === user?.id) && (
+                          <button
+                            type="button"
+                            onClick={() => handleAttachmentDelete(attachment.id)}
+                            title="Delete attachment"
+                            aria-label={`Delete ${attachment.originalName}`}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Comments Section */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-5 border-b border-gray-100 flex items-center gap-2">
@@ -441,11 +618,24 @@ const TicketDetail = () => {
                               <span className="text-xs font-semibold text-gray-800">
                                 {comment.author?.name || "Unknown"}
                               </span>
-                              <span className="text-xs text-gray-400">
-                                {new Date(
-                                  comment.createdAt,
-                                ).toLocaleDateString()}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">
+                                  {new Date(
+                                    comment.createdAt,
+                                  ).toLocaleDateString()}
+                                </span>
+                                {user?.role === "admin" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCommentDelete(comment.id)}
+                                    title="Delete comment"
+                                    aria-label="Delete comment"
+                                    className="p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <p className="text-gray-700 text-sm">
                               {comment.comment}

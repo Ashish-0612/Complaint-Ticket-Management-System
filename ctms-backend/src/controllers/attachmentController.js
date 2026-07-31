@@ -1,5 +1,6 @@
 const { Attachment, User } = require('../models/index')
 const upload = require('../config/multer')
+const fs = require('fs').promises
 
 // ========== UPLOAD FILE ==========
 const uploadFile = async (req, res) => {
@@ -98,7 +99,15 @@ const deleteAttachment = async (req, res) => {
       })
     }
 
+    if (req.user.role !== 'admin' && attachment.userId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own attachments!'
+      })
+    }
+
     await attachment.destroy()
+    await fs.unlink(attachment.filePath).catch(() => {})
 
     res.status(200).json({
       success: true,

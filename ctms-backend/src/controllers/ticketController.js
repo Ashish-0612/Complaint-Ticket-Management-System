@@ -1,6 +1,7 @@
 // Import models
-const { Ticket, User, Department, Category } = require('../models/index')
+const { Ticket, User, Department, Category, Comment, ActivityLog, Attachment } = require('../models/index')
 const { sendEmail, ticketCreatedEmail, ticketResolvedEmail, ticketUpdatedEmail } = require('../config/email')
+const fs = require('fs').promises
 
 // ========== GET ALL TICKETS ==========
   // GET ALL TICKETS
@@ -286,7 +287,16 @@ const deleteTicket = async (req, res) => {
       })
     }
 
-    // Delete ticket
+      const attachments = await Attachment.findAll({ where: { ticketId: id } })
+      await Promise.all([
+        Comment.destroy({ where: { ticketId: id } }),
+        ActivityLog.destroy({ where: { ticketId: id } }),
+        Attachment.destroy({ where: { ticketId: id } }),
+        ...attachments.map((attachment) =>
+          fs.unlink(attachment.filePath).catch(() => {}),
+        ),
+      ])
+
     await ticket.destroy()
 
     res.status(200).json({

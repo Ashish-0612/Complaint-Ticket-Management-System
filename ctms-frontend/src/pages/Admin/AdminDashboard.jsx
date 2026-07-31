@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Search,
   Filter,
+  Trash2,
 } from "lucide-react";
 import {
   LineChart,
@@ -149,6 +150,23 @@ const AdminDashboard = () => {
       setTickets(res.data.data);
     } catch {
       alert("Failed to assign!");
+    }
+  };
+
+  const handleTicketDelete = async (ticketId) => {
+    try {
+      await API.delete(`/tickets/${ticketId}`);
+      const updated = tickets.filter((ticket) => ticket.id !== ticketId);
+      setTickets(updated);
+      setStats({
+        total: updated.length,
+        open: updated.filter((ticket) => ticket.status === "open").length,
+        inProgress: updated.filter((ticket) => ticket.status === "in-progress").length,
+        resolved: updated.filter((ticket) => ticket.status === "resolved").length,
+        closed: updated.filter((ticket) => ticket.status === "closed").length,
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete complaint!");
     }
   };
 
@@ -587,13 +605,13 @@ const AdminDashboard = () => {
                       {ticket.priority}
                     </span>
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-1 flex items-center gap-2">
                     <select
                       value={ticket.agentId || ""}
                       onChange={(e) =>
                         handleAgentAssign(ticket.id, e.target.value)
                       }
-                      className="text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer w-full"
+                      className="min-w-0 flex-1 text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <option value="">Unassigned</option>
@@ -603,6 +621,18 @@ const AdminDashboard = () => {
                         </option>
                       ))}
                     </select>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTicketDelete(ticket.id);
+                      }}
+                      title="Delete complaint"
+                      aria-label={`Delete complaint ${ticket.id}`}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               ))}
