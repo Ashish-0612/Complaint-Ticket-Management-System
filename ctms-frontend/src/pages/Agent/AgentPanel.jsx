@@ -88,6 +88,21 @@ const AgentPanel = () => {
     }
   };
 
+  const handlePriorityChange = async (ticketId, newPriority) => {
+    try {
+      await API.put(`/tickets/${ticketId}`, { priority: newPriority });
+      setTickets((currentTickets) =>
+        currentTickets.map((ticket) =>
+          ticket.id === ticketId
+            ? { ...ticket, priority: newPriority }
+            : ticket,
+        ),
+      );
+    } catch {
+      alert("Failed to update priority!");
+    }
+  };
+
   const filteredTickets = tickets.filter((ticket) => {
     const searchValue = searchQuery.toLowerCase().trim();
     const matchesSearch =
@@ -460,11 +475,20 @@ const AgentPanel = () => {
                       </select>
                     </div>
                     <div className="col-span-1">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-lg font-medium ${getPriorityBadge(ticket.priority)}`}
+                      <select
+                        value={ticket.priority}
+                        onChange={(e) =>
+                          handlePriorityChange(ticket.id, e.target.value)
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Change priority for complaint ${ticket.id}`}
+                        className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getPriorityBadge(ticket.priority)}`}
                       >
-                        {ticket.priority}
-                      </span>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </select>
                     </div>
                   </div>
                 ))}
