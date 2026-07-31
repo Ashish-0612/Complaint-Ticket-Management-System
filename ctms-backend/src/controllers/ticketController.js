@@ -1,6 +1,6 @@
 // Import models
 const { Ticket, User, Department, Category } = require('../models/index')
-const { sendEmail, ticketCreatedEmail } = require('../config/email')
+const { sendEmail, ticketCreatedEmail, ticketResolvedEmail, ticketUpdatedEmail } = require('../config/email')
 
 // ========== GET ALL TICKETS ==========
   // GET ALL TICKETS
@@ -171,16 +171,17 @@ const createTicket = async (req, res) => {
     })
 
     // Send ticket created email
-      await sendEmail({
-        to: req.user.email,
-        subject: `Ticket #${ticket.id} Created Successfully!`,
-        html: ticketCreatedEmail(req.user.name, ticket.id, ticket.title)
-      })
+    const emailResult = await sendEmail({
+      to: req.user.email,
+      subject: `Ticket #${ticket.id} Created Successfully!`,
+      html: ticketCreatedEmail(req.user.name, ticket.id, ticket.title)
+    })
 
     res.status(201).json({
       success: true,
       message: 'Ticket created successfully!',
-      data: ticket
+      data: ticket,
+      emailPreview: emailResult?.preview || null
     })
 
   } catch (error) {
@@ -206,17 +207,61 @@ const updateTicket = async (req, res) => {
       });
     }
 
+    // Capture previous state
+    const prevStatus = ticket.status
+    const prevAgentId = ticket.agentId
+
     await ticket.update({
       title: title || ticket.title,
       status: status || ticket.status,
       priority: priority || ticket.priority,
-      agentId: agentId !== undefined ? agentId : ticket.agentId, // ← ye add karo
+      agentId: agentId !== undefined ? agentId : ticket.agentId,
     });
+
+    // Fetch creator and agent details for notifications
+    const creator = await User.findByPk(ticket.userId)
+    const agent = ticket.agentId ? await User.findByPk(ticket.agentId) : null
+
+    // If status changed to resolved — send resolved email to creator
+    let emailPreview = null
+    if (status && status !== prevStatus) {
+      if (status === 'resolved') {
+        if (creator) {
+          const resEmail = await sendEmail({
+            to: creator.email,
+            subject: `Ticket #${ticket.id} Resolved`,
+            html: ticketResolvedEmail(creator.name, ticket.id, ticket.title)
+          })
+          if (resEmail?.preview) emailPreview = resEmail.preview
+        }
+      } else {
+        // Generic status update — notify creator
+        if (creator) {
+          const resEmail = await sendEmail({
+            to: creator.email,
+            subject: `Ticket #${ticket.id} Updated`,
+            html: ticketUpdatedEmail(creator.name, ticket.id, ticket.title, ticket.status)
+          })
+          if (resEmail?.preview) emailPreview = resEmail.preview
+        }
+      }
+    }
+
+    // If agent assigned or changed, notify the agent
+    if (ticket.agentId && ticket.agentId !== prevAgentId && agent) {
+      const resEmail2 = await sendEmail({
+        to: agent.email,
+        subject: `New Ticket Assigned: #${ticket.id}`,
+        html: ticketUpdatedEmail(agent.name, ticket.id, ticket.title, ticket.status)
+      })
+      if (resEmail2?.preview) emailPreview = resEmail2.preview || emailPreview
+    }
 
     res.status(200).json({
       success: true,
       message: `Ticket ${id} updated successfully!`,
       data: ticket,
+      emailPreview: emailPreview
     });
   } catch (error) {
     res.status(500).json({
