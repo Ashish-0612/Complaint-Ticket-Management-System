@@ -1,12 +1,16 @@
 const multer = require('multer')
 const path = require('path')
+const fs = require('fs')
+
+const uploadDirectory = path.resolve(__dirname, '../../uploads/tickets')
+fs.mkdirSync(uploadDirectory, { recursive: true })
 
 // ========== STORAGE CONFIG ==========
 const storage = multer.diskStorage({
 
   // Where to save files
   destination: (req, file, cb) => {
-    cb(null, 'uploads/tickets/')
+    cb(null, uploadDirectory)
   },
 
   // What to name the file

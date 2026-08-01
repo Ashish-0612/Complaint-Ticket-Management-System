@@ -26,6 +26,9 @@ router.post('/',  protect, validateTicket, ticketController.createTicket)
 // PUT /api/tickets/:id — UPDATE ticket
 router.put('/:id',  protect,  authorize('admin', 'agent'), ticketController.updateTicket)
 
+// POST /api/tickets/:id/reopen — reopen a resolved or closed ticket
+router.post('/:id/reopen', protect, ticketController.reopenTicket)
+
 // DELETE /api/tickets/:id — DELETE ticket
 router.delete('/:id', protect, authorize('admin'), ticketController.deleteTicket)
 

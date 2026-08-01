@@ -93,7 +93,7 @@ const UserManagement = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users", active: true },
-    { icon: UserCog, label: "Agents", path: "/admin" },
+    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
     { icon: Tag, label: "Categories", path: "/admin" },
     { icon: Ticket, label: "Complaints", path: "/admin" },
     { icon: BarChart3, label: "Reports", path: "/admin" },

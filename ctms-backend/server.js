@@ -1,6 +1,15 @@
 // Step 1 — Load .env file variables first — always at top!
 require('dotenv').config()
 
+// Ensure JWT env vars exist — provide development defaults to avoid crash
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️ JWT_SECRET not set in .env — using development default. Set JWT_SECRET in production.');
+  process.env.JWT_SECRET = 'dev_secret_change_me';
+}
+if (!process.env.JWT_EXPIRE) {
+  process.env.JWT_EXPIRE = '7d';
+}
+
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 
@@ -13,6 +22,7 @@ const userRoutes = require("./src/routes/userRoutes");
 
 // Step 2 — Import express package
 const express = require('express')
+const path = require('path')
 
 // Step 3 — Import cors package
 const cors = require('cors')
@@ -37,7 +47,7 @@ const app = express()
 app.use(helmet())
 
 // Serve uploaded files statically
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')))
 
 // ========== RATE LIMITING ==========
 const limiter = rateLimit({
@@ -147,7 +157,7 @@ app.listen(PORT, async () => {
   await Category.sync({ force: false })
   console.log('✅ Categories table synced!')
 
-  await Ticket.sync({force: false })
+  await Ticket.sync({ force: false });
   console.log('✅ Tickets table synced!')
 
   await Comment.sync({ force: false })

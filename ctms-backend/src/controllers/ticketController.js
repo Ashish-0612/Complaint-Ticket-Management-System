@@ -1,6 +1,19 @@
 // Import models
-const { Ticket, User, Department, Category } = require('../models/index')
-const { sendEmail, ticketCreatedEmail } = require('../config/email')
+const { Op } = require('sequelize')
+const { Ticket, User, Department, Category, Comment, ActivityLog, Attachment } = require('../models/index')
+const { sendEmail, ticketCreatedEmail, ticketResolvedEmail, ticketUpdatedEmail } = require('../config/email')
+const fs = require('fs').promises
+
+const getSlaDays = (priority) => {
+  const slaDays = { critical: 1, high: 2, medium: 3, low: 5 }
+  return slaDays[priority] || slaDays.medium
+}
+
+const getDefaultDueDate = (priority) => {
+  const dueDate = new Date()
+  dueDate.setDate(dueDate.getDate() + getSlaDays(priority))
+  return dueDate
+}
 
 // ========== GET ALL TICKETS ==========
   // GET ALL TICKETS
@@ -135,7 +148,7 @@ const getTicketById = async (req, res) => {
 // ========== CREATE TICKET ==========
 const createTicket = async (req, res) => {
   try {
-    const { title, description, priority, departmentId, categoryId } = req.body
+    const { title, description, priority, departmentId, categoryId, dueDate } = req.body
 
     // Validate required fields
     if (!title) {
@@ -164,6 +177,7 @@ const createTicket = async (req, res) => {
       title,
       description,
       priority: priority || 'medium',
+      dueDate: dueDate || getDefaultDueDate(priority || 'medium'),
       status: 'open',
       userId: req.user.id,        // hardcoded for now — later from JWT!
       departmentId,
@@ -171,16 +185,17 @@ const createTicket = async (req, res) => {
     })
 
     // Send ticket created email
-      await sendEmail({
-        to: req.user.email,
-        subject: `Ticket #${ticket.id} Created Successfully!`,
-        html: ticketCreatedEmail(req.user.name, ticket.id, ticket.title)
-      })
+    const emailResult = await sendEmail({
+      to: req.user.email,
+      subject: `Ticket #${ticket.id} Created Successfully!`,
+      html: ticketCreatedEmail(req.user.name, ticket.id, ticket.title)
+    })
 
     res.status(201).json({
       success: true,
       message: 'Ticket created successfully!',
-      data: ticket
+      data: ticket,
+      emailPreview: emailResult?.preview || null
     })
 
   } catch (error) {
@@ -195,7 +210,7 @@ const createTicket = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, status, priority, agentId } = req.body; // ← agentId add karo
+    const { title, status, priority, agentId, dueDate } = req.body; // ← agentId add karo
 
     const ticket = await Ticket.findByPk(id);
 
@@ -206,17 +221,62 @@ const updateTicket = async (req, res) => {
       });
     }
 
+    // Capture previous state
+    const prevStatus = ticket.status
+    const prevAgentId = ticket.agentId
+
     await ticket.update({
       title: title || ticket.title,
       status: status || ticket.status,
       priority: priority || ticket.priority,
-      agentId: agentId !== undefined ? agentId : ticket.agentId, // ← ye add karo
+      agentId: agentId !== undefined ? agentId : ticket.agentId,
+      dueDate: dueDate !== undefined ? dueDate : ticket.dueDate,
     });
+
+    // Fetch creator and agent details for notifications
+    const creator = await User.findByPk(ticket.userId)
+    const agent = ticket.agentId ? await User.findByPk(ticket.agentId) : null
+
+    // If status changed to resolved — send resolved email to creator
+    let emailPreview = null
+    if (status && status !== prevStatus) {
+      if (status === 'resolved') {
+        if (creator) {
+          const resEmail = await sendEmail({
+            to: creator.email,
+            subject: `Ticket #${ticket.id} Resolved`,
+            html: ticketResolvedEmail(creator.name, ticket.id, ticket.title)
+          })
+          if (resEmail?.preview) emailPreview = resEmail.preview
+        }
+      } else {
+        // Generic status update — notify creator
+        if (creator) {
+          const resEmail = await sendEmail({
+            to: creator.email,
+            subject: `Ticket #${ticket.id} Updated`,
+            html: ticketUpdatedEmail(creator.name, ticket.id, ticket.title, ticket.status)
+          })
+          if (resEmail?.preview) emailPreview = resEmail.preview
+        }
+      }
+    }
+
+    // If agent assigned or changed, notify the agent
+    if (ticket.agentId && ticket.agentId !== prevAgentId && agent) {
+      const resEmail2 = await sendEmail({
+        to: agent.email,
+        subject: `New Ticket Assigned: #${ticket.id}`,
+        html: ticketUpdatedEmail(agent.name, ticket.id, ticket.title, ticket.status)
+      })
+      if (resEmail2?.preview) emailPreview = resEmail2.preview || emailPreview
+    }
 
     res.status(200).json({
       success: true,
       message: `Ticket ${id} updated successfully!`,
       data: ticket,
+      emailPreview: emailPreview
     });
   } catch (error) {
     res.status(500).json({
@@ -225,6 +285,72 @@ const updateTicket = async (req, res) => {
     });
   }
 };
+
+// ========== REOPEN TICKET ==========
+const reopenTicket = async (req, res) => {
+  try {
+    const ticket = await Ticket.findByPk(req.params.id)
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: `Ticket with id ${req.params.id} not found`
+      })
+    }
+
+    const canReopen =
+      req.user.role === 'admin' ||
+      req.user.role === 'agent' ||
+      ticket.userId === req.user.id
+
+    if (!canReopen) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to reopen this ticket'
+      })
+    }
+
+    if (!['resolved', 'closed'].includes(ticket.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Only resolved or closed tickets can be reopened'
+      })
+    }
+
+    const previousStatus = ticket.status
+    await ticket.update({ status: 'reopened' })
+
+    await ActivityLog.create({
+      ticketId: ticket.id,
+      userId: req.user.id,
+      action: 'Ticket reopened',
+      details: `Status changed from ${previousStatus} to reopened`
+    })
+
+    const creator = await User.findByPk(ticket.userId)
+    let emailPreview = null
+    if (creator) {
+      const emailResult = await sendEmail({
+        to: creator.email,
+        subject: `Ticket #${ticket.id} Reopened`,
+        html: ticketUpdatedEmail(creator.name, ticket.id, ticket.title, ticket.status)
+      })
+      emailPreview = emailResult?.preview || null
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Ticket ${ticket.id} reopened successfully!`,
+      data: ticket,
+      emailPreview
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
 
 // ========== DELETE TICKET ==========
 const deleteTicket = async (req, res) => {
@@ -241,7 +367,16 @@ const deleteTicket = async (req, res) => {
       })
     }
 
-    // Delete ticket
+      const attachments = await Attachment.findAll({ where: { ticketId: id } })
+      await Promise.all([
+        Comment.destroy({ where: { ticketId: id } }),
+        ActivityLog.destroy({ where: { ticketId: id } }),
+        Attachment.destroy({ where: { ticketId: id } }),
+        ...attachments.map((attachment) =>
+          fs.unlink(attachment.filePath).catch(() => {}),
+        ),
+      ])
+
     await ticket.destroy()
 
     res.status(200).json({
@@ -262,5 +397,6 @@ module.exports = {
   getTicketById,
   createTicket,
   updateTicket,
+  reopenTicket,
   deleteTicket
 }

@@ -73,10 +73,10 @@ const Register = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
-      <div className="bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex">
+      <div className="auth-card bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex">
         {/* ===== LEFT — Illustration ===== */}
         <div
-          className="hidden md:flex w-2/5 flex-col justify-between p-10"
+          className="auth-illustration hidden md:flex w-2/5 flex-col justify-between p-10"
           style={{
             background: "linear-gradient(145deg, #e8f0fe 0%, #dbeafe 100%)",
           }}

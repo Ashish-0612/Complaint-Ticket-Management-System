@@ -38,12 +38,12 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex"
+        className="auth-card bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex"
         style={{ minHeight: "560px" }}
       >
         {/* ===== LEFT — Illustration ===== */}
         <div
-          className="hidden md:flex w-2/5 flex-col justify-between p-10"
+          className="auth-illustration hidden md:flex w-2/5 flex-col justify-between p-10"
           style={{
             background: "linear-gradient(145deg, #e8f0fe 0%, #dbeafe 100%)",
           }}
@@ -247,7 +247,7 @@ const Login = () => {
         </div>
 
         {/* ===== RIGHT — Form ===== */}
-        <div className="w-full md:w-3/5 flex flex-col justify-center p-10">
+        <div className="auth-form w-full md:w-3/5 flex flex-col justify-center p-10">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-1">Sign In</h1>
             <p className="text-gray-500 text-sm">

@@ -1,7 +1,8 @@
 const express = require("express");
+const { Op } = require("sequelize");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
-const { User } = require("../models/index");
+const { User, Ticket } = require("../models/index");
 
 // GET /api/users/agents — sirf agents
 router.get("/agents", protect, authorize("admin"), async (req, res) => {
@@ -11,6 +12,48 @@ router.get("/agents", protect, authorize("admin"), async (req, res) => {
       attributes: ["id", "name", "email"],
     });
     res.status(200).json({ success: true, data: agents });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
+// GET /api/users/agents/performance — agent ticket performance summary
+router.get("/agents/performance", protect, authorize("admin"), async (req, res) => {
+  try {
+    const agents = await User.findAll({
+      where: { role: "agent", isActive: true },
+      attributes: ["id", "name", "email"],
+      order: [["name", "ASC"]],
+    });
+
+    const tickets = await Ticket.findAll({
+      where: { agentId: { [Op.ne]: null } },
+      attributes: ["agentId", "status"],
+      raw: true,
+    });
+
+    const performance = agents.map((agent) => {
+      const agentTickets = tickets.filter((ticket) => ticket.agentId === agent.id);
+      const totalAssigned = agentTickets.length;
+      const resolved = agentTickets.filter((ticket) => ticket.status === "resolved").length;
+      const inProgress = agentTickets.filter((ticket) => ticket.status === "in-progress").length;
+      const pending = agentTickets.filter((ticket) => ticket.status === "open" || ticket.status === "reopened").length;
+      const resolutionRate = totalAssigned ? Math.round((resolved / totalAssigned) * 100) : 0;
+
+      return {
+        id: agent.id,
+        name: agent.name,
+        email: agent.email,
+        totalAssigned,
+        resolved,
+        inProgress,
+        pending,
+        resolutionRate,
+      };
+    });
+
+    res.status(200).json({ success: true, data: performance });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

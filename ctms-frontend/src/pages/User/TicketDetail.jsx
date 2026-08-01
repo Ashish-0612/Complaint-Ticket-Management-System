@@ -13,13 +13,19 @@ import {
   Clock,
   User,
   Calendar,
+  CalendarClock,
   Tag,
   MessageSquare,
   Send,
   ArrowLeft,
+  Paperclip,
+  Trash2,
   UserCog,
   BarChart3,
   Settings,
+  RotateCcw,
+  Printer,
+  LoaderCircle,
 } from "lucide-react";
 
 const TicketDetail = () => {
@@ -34,6 +40,13 @@ const TicketDetail = () => {
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [activityLogs, setActivityLogs] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [reopenLoading, setReopenLoading] = useState(false);
+  const [pdfExportLoading, setPdfExportLoading] = useState(false);
+  const [currentTime] = useState(() => Date.now());
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -73,6 +86,18 @@ const TicketDetail = () => {
     fetchActivityLogs();
   }, [id]);
 
+  useEffect(() => {
+    const fetchAttachments = async () => {
+      try {
+        const res = await API.get(`/tickets/${id}/attachments`);
+        setAttachments(res.data.data);
+      } catch {
+        setAttachments([]);
+      }
+    };
+    fetchAttachments();
+  }, [id]);
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -105,9 +130,100 @@ const TicketDetail = () => {
     }
   };
 
+  const handleCommentDelete = async (commentId) => {
+    try {
+      await API.delete(`/tickets/${id}/comments/${commentId}`);
+      setComments((currentComments) =>
+        currentComments.filter((comment) => comment.id !== commentId),
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete comment.");
+    }
+  };
+
+  const handleAttachmentUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setAttachmentError("File size must be 5 MB or less.");
+      return;
+    }
+
+    setAttachmentLoading(true);
+    setAttachmentError("");
+    try {
+      const uploadData = new FormData();
+      uploadData.append("file", selectedFile);
+      const res = await API.post(`/tickets/${id}/attachments`, uploadData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setAttachments((currentAttachments) => [
+        { ...res.data.data, uploadedBy: user },
+        ...currentAttachments,
+      ]);
+      setSelectedFile(null);
+      e.target.reset();
+    } catch (err) {
+      setAttachmentError(
+        err.response?.data?.message || "Failed to upload attachment.",
+      );
+    } finally {
+      setAttachmentLoading(false);
+    }
+  };
+
+  const handleAttachmentDelete = async (attachmentId) => {
+    try {
+      await API.delete(`/tickets/${id}/attachments/${attachmentId}`);
+      setAttachments((currentAttachments) =>
+        currentAttachments.filter((attachment) => attachment.id !== attachmentId),
+      );
+    } catch (err) {
+      setAttachmentError(
+        err.response?.data?.message || "Failed to delete attachment.",
+      );
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleReopen = async () => {
+    setReopenLoading(true);
+    setError("");
+    try {
+      const res = await API.post(`/tickets/${id}/reopen`);
+      setTicket((currentTicket) => ({
+        ...currentTicket,
+        ...res.data.data,
+        status: "reopened",
+      }));
+      const logsRes = await API.get(`/tickets/${id}/comments/logs`);
+      setActivityLogs(logsRes.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to reopen ticket.");
+    } finally {
+      setReopenLoading(false);
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (!ticket || pdfExportLoading) return;
+
+    setPdfExportLoading(true);
+    const originalTitle = document.title;
+    document.title = `Complaint-${ticket.id}`;
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        window.print();
+        document.title = originalTitle;
+        setPdfExportLoading(false);
+      }, 250);
+    });
   };
 
   const getStatusColor = (status) => {
@@ -120,6 +236,8 @@ const TicketDetail = () => {
         return "bg-green-100 text-green-700 border border-green-200";
       case "closed":
         return "bg-gray-100 text-gray-600 border border-gray-200";
+      case "reopened":
+        return "bg-orange-100 text-orange-700 border border-orange-200";
       default:
         return "bg-gray-100 text-gray-600";
     }
@@ -138,6 +256,25 @@ const TicketDetail = () => {
       default:
         return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getDueDateState = () => {
+    if (!ticket?.dueDate) return { label: "Not set", overdue: false };
+
+    const dueDate = new Date(ticket.dueDate);
+    const isCompleted = ["resolved", "closed"].includes(ticket.status);
+    const overdue = !isCompleted && dueDate.getTime() < currentTime;
+    return {
+      label: dueDate.toLocaleDateString(),
+      overdue,
+    };
   };
 
   // Role based sidebar
@@ -173,6 +310,8 @@ const TicketDetail = () => {
     return "/dashboard";
   };
 
+  const dueDateState = getDueDateState();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -204,7 +343,7 @@ const TicketDetail = () => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
+      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0 print-hidden">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
@@ -270,7 +409,7 @@ const TicketDetail = () => {
       {/* ========== MAIN ========== */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0 print-hidden">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(getBackPath())}
@@ -288,6 +427,23 @@ const TicketDetail = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={pdfExportLoading || !ticket}
+              title="Export ticket as PDF"
+              aria-label="Export ticket as PDF"
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+            >
+              {pdfExportLoading ? (
+                <LoaderCircle size={17} className="animate-spin" />
+              ) : (
+                <Printer size={17} />
+              )}
+              <span className="hidden sm:inline text-xs font-semibold">
+                {pdfExportLoading ? "Preparing..." : "Export PDF"}
+              </span>
+            </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
               <Bell size={18} />
             </button>
@@ -303,6 +459,23 @@ const TicketDetail = () => {
             </div>
           </div>
         </header>
+
+        {pdfExportLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/35 px-4 print-hidden">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+                <LoaderCircle size={24} className="animate-spin text-blue-600" />
+              </div>
+              <h2 className="text-base font-bold text-gray-800">Preparing PDF</h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Formatting ticket details, comments and attachments.
+              </p>
+              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-600" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -324,6 +497,20 @@ const TicketDetail = () => {
                   >
                     {ticket?.priority}
                   </span>
+                  {(ticket?.status === "resolved" || ticket?.status === "closed") &&
+                    (user?.role === "admin" ||
+                      user?.role === "agent" ||
+                      ticket?.creator?.id === user?.id) && (
+                      <button
+                        type="button"
+                        onClick={handleReopen}
+                        disabled={reopenLoading}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-orange-700 border border-orange-200 hover:bg-orange-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        <RotateCcw size={12} />
+                        {reopenLoading ? "Reopening..." : "Reopen Ticket"}
+                      </button>
+                    )}
                 </div>
               </div>
 
@@ -402,6 +589,116 @@ const TicketDetail = () => {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                    <CalendarClock size={14} className="text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Due Date / SLA</p>
+                    <p
+                      className={`text-xs font-semibold ${dueDateState.overdue ? "text-red-600" : "text-gray-700"}`}
+                    >
+                      {dueDateState.overdue ? "Overdue · " : ""}
+                      {dueDateState.label}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attachments Section */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                <Paperclip size={18} className="text-gray-600" />
+                <h3 className="font-bold text-gray-800">Attachments</h3>
+                <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
+                  {attachments.length}
+                </span>
+              </div>
+
+              <div className="p-5">
+                <form
+                  onSubmit={handleAttachmentUpload}
+                  className="flex flex-col sm:flex-row gap-3 mb-5 print-hidden"
+                >
+                  <label className="flex-1 flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
+                    <Paperclip size={18} className="text-blue-600 flex-shrink-0" />
+                    <span className="truncate">
+                      {selectedFile ? selectedFile.name : "Choose a file to attach"}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
+                      onChange={(event) => {
+                        setSelectedFile(event.target.files?.[0] || null);
+                        setAttachmentError("");
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={!selectedFile || attachmentLoading}
+                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 cursor-pointer"
+                  >
+                    {attachmentLoading ? "Uploading..." : "Upload"}
+                  </button>
+                </form>
+                <p className="text-xs text-gray-400 mb-4">
+                  Images and documents up to 5 MB.
+                </p>
+                {attachmentError && (
+                  <p className="text-sm text-red-500 mb-4">{attachmentError}</p>
+                )}
+
+                {attachments.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Paperclip size={28} className="text-gray-200 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">No attachments yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {attachments.map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-3 py-3"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Paperclip size={16} className="text-blue-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {attachment.originalName}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {formatFileSize(attachment.fileSize)} · {attachment.uploadedBy?.name || "Unknown"}
+                          </p>
+                        </div>
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 text-xs font-semibold hover:underline flex-shrink-0"
+                        >
+                          Open
+                        </a>
+                        {(user?.role === "admin" ||
+                          attachment.uploadedBy?.id === user?.id) && (
+                          <button
+                            type="button"
+                            onClick={() => handleAttachmentDelete(attachment.id)}
+                            title="Delete attachment"
+                            aria-label={`Delete ${attachment.originalName}`}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -441,11 +738,24 @@ const TicketDetail = () => {
                               <span className="text-xs font-semibold text-gray-800">
                                 {comment.author?.name || "Unknown"}
                               </span>
-                              <span className="text-xs text-gray-400">
-                                {new Date(
-                                  comment.createdAt,
-                                ).toLocaleDateString()}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">
+                                  {new Date(
+                                    comment.createdAt,
+                                  ).toLocaleDateString()}
+                                </span>
+                                {user?.role === "admin" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCommentDelete(comment.id)}
+                                    title="Delete comment"
+                                    aria-label="Delete comment"
+                                    className="p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <p className="text-gray-700 text-sm">
                               {comment.comment}
@@ -460,7 +770,7 @@ const TicketDetail = () => {
                 {/* Add Comment */}
                 <form
                   onSubmit={handleCommentSubmit}
-                  className="flex gap-3 mt-4"
+                  className="flex gap-3 mt-4 print-hidden"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {user?.name?.charAt(0).toUpperCase()}
