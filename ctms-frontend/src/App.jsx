@@ -17,6 +17,7 @@ import Profile from "./pages/Profile/Profile";
 import UserManagement from "./pages/Admin/UserManagement";
 import DepartmentManagement from "./pages/Admin/DepartmentManagement";
 import CategoryManagement from "./pages/Admin/CategoryManagement";
+import TrackStatus from "./pages/User/TrackStatus";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "./context/ThemeContext";
 
@@ -71,6 +72,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["user", "admin", "agent"]}>
                 <TicketDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/track-status"
+            element={
+              <ProtectedRoute allowedRoles={["user", "admin", "agent"]}>
+                <TrackStatus />
               </ProtectedRoute>
             }
           />
