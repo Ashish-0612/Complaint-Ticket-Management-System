@@ -462,7 +462,7 @@ const Dashboard = () => {
                   </button>
 
                   <button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/track-status")}
                     className="w-full flex items-center gap-3 p-3 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-xl transition-all cursor-pointer"
                   >
                     <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
