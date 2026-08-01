@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.env
+*.env
+!**/.env.example
+ctms-backend/uploads/tickets/*
+!ctms-backend/uploads/tickets/.gitkeep
+ctms-frontend/dist/

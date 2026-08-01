@@ -1,4 +1,21 @@
-# React + Vite
+# CTMS Frontend
+
+Install dependencies and run the frontend from this directory:
+
+```bash
+npm install
+npm run dev
+```
+
+The development server is available at `http://localhost:5173`.
+
+## Build
+
+```bash
+npm run build
+```
+
+The rest of this file contains the standard Vite reference notes.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

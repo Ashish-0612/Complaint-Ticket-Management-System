@@ -1,7 +1,7 @@
 md# CTMS Backend API
 ## Complaint Ticket Management System
 
-A production-ready REST API built with Node.js, Express, MySQL and Sequelize ORM.
+A REST API built with Node.js, Express, SQL Server and Sequelize ORM.
 
 ---
 
@@ -9,7 +9,7 @@ A production-ready REST API built with Node.js, Express, MySQL and Sequelize ORM
 
 - **Runtime:** Node.js
 - **Framework:** Express.js
-- **Database:** MySQL + Sequelize ORM
+- **Database:** SQL Server + Sequelize ORM
 - **Authentication:** JWT + bcrypt
 - **File Upload:** Multer
 - **Email:** Nodemailer
@@ -22,7 +22,7 @@ A production-ready REST API built with Node.js, Express, MySQL and Sequelize ORM
 
 ### Prerequisites
 - Node.js v18+
-- MySQL (XAMPP)
+- SQL Server or SQL Server Express
 - npm
 
 ### Installation
@@ -48,10 +48,11 @@ npm run dev
 ## 📌 Environment Variables
 PORT=5000
 NODE_ENV=development
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=ctms_db
+DB_HOST=127.0.0.1
+DB_PORT=1433
+DB_USER=sa
+DB_PASSWORD=your_sql_server_password
+DB_NAME=CTMS_DB
 JWT_SECRET=your_secret_key
 JWT_EXPIRE=7d
 EMAIL_HOST=smtp.gmail.com
