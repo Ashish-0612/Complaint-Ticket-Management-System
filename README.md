@@ -1,6 +1,6 @@
 # 🎫 CTMS — Complaint Ticket Management System
 
-> A production-ready, full-stack IT Helpdesk & Ticket Management System built with Node.js, Express.js, MySQL, Sequelize ORM, and React.js. Inspired by real-world tools like **Jira**, **Freshdesk**, and **Zendesk**.
+> A full-stack IT Helpdesk & Ticket Management System built with Node.js, Express.js, SQL Server, Sequelize ORM, and React.js.
 
 ---
 
@@ -30,7 +30,7 @@ This project demonstrates:
 - ✅ REST API design
 - ✅ JWT Authentication & Authorization
 - ✅ Role Based Access Control (RBAC)
-- ✅ Real MySQL database with Sequelize ORM
+- ✅ Real SQL Server database with Sequelize ORM
 - ✅ File uploads, Email notifications
 - ✅ Search, Filter & Pagination
 - ✅ React frontend with Context API & Protected Routes
@@ -194,7 +194,7 @@ CTMS/
 
 ### Prerequisites
 - Node.js v18+
-- XAMPP (MySQL + Apache)
+- SQL Server or SQL Server Express with TCP/IP enabled
 - Git
 
 ### 1️⃣ Clone the Repository
@@ -223,10 +223,10 @@ npm run dev
 
 ### 3️⃣ Database Setup
 
-1. Open XAMPP → Start **Apache** + **MySQL**
-2. Go to `http://localhost/phpmyadmin`
-3. Create database → name it `ctms_db`
-4. Run backend → tables auto-created by Sequelize!
+1. Install SQL Server/SQL Server Express and enable TCP/IP.
+2. Create a database named `CTMS_DB` and configure SQL authentication.
+3. Copy `ctms-backend/.env.example` to `ctms-backend/.env` and fill in your SQL Server credentials.
+4. Run the backend; Sequelize creates the application tables automatically.
 
 ### 4️⃣ Seed Data (Optional)
 
@@ -274,10 +274,11 @@ PORT=5000
 NODE_ENV=development
 
 # Database
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=ctms_db
+DB_HOST=127.0.0.1
+DB_PORT=1433
+DB_USER=sa
+DB_PASSWORD=your_sql_server_password
+DB_NAME=CTMS_DB
 
 # JWT
 JWT_SECRET=your_super_secret_jwt_key_here
