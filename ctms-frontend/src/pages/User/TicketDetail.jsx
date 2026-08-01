@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import NotificationBell from "../../components/NotificationBell";
 import {
   Ticket,
   LogOut,
   LayoutDashboard,
   PlusCircle,
   Activity,
-  Bell,
   AlertCircle,
   Clock,
   User,
@@ -444,9 +444,7 @@ const TicketDetail = () => {
                 {pdfExportLoading ? "Preparing..." : "Export PDF"}
               </span>
             </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={ticket ? [ticket] : []} />
             <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
               <div
                 className={`w-6 h-6 rounded-full ${getSidebarColor()} flex items-center justify-center text-white text-xs font-bold`}

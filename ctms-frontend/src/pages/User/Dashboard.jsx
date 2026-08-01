@@ -3,11 +3,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 import Pagination from "../../components/Pagination";
+import NotificationBell from "../../components/NotificationBell";
 import {
   LayoutDashboard,
   Ticket,
   PlusCircle,
-  Bell,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -221,12 +221,7 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-              {stats.open > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -297,7 +292,7 @@ const Dashboard = () => {
           {/* My Complaints + Quick Actions */}
           <div className="grid grid-cols-3 gap-4">
             {/* My Complaints Table */}
-            <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="mobile-ticket-table col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-gray-800">My Complaints</h3>
@@ -319,7 +314,7 @@ const Dashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-36"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-36"
                     />
                   </div>
                   <div className="relative">
@@ -333,7 +328,7 @@ const Dashboard = () => {
                         setFilterStatus(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
                     >
                       <option value="all">All Status</option>
                       <option value="open">Open</option>
@@ -350,7 +345,7 @@ const Dashboard = () => {
                       setCurrentPage(1);
                     }}
                     aria-label="Filter complaints by priority"
-                    className="px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                    className="filter-control px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
                   >
                     <option value="all">All Priority</option>
                     <option value="critical">Critical</option>
@@ -362,7 +357,7 @@ const Dashboard = () => {
                     <button
                       type="button"
                       onClick={clearFilters}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                      className="filter-action px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
                     >
                       Clear
                     </button>
@@ -377,7 +372,7 @@ const Dashboard = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <div className="col-span-1">ID</div>
                 <div className="col-span-2">Title</div>
                 <div className="col-span-1">Status</div>
@@ -414,7 +409,7 @@ const Dashboard = () => {
                   <div
                     key={ticket.id}
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
-                    className="grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
+                    className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
                   >
                     <div className="col-span-1 text-xs text-gray-400 font-mono">
                       #{ticket.id}
