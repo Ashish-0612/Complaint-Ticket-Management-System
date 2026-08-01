@@ -24,6 +24,8 @@ import {
   BarChart3,
   Settings,
   RotateCcw,
+  Printer,
+  LoaderCircle,
 } from "lucide-react";
 
 const TicketDetail = () => {
@@ -43,6 +45,7 @@ const TicketDetail = () => {
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState("");
   const [reopenLoading, setReopenLoading] = useState(false);
+  const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const [currentTime] = useState(() => Date.now());
 
   useEffect(() => {
@@ -208,6 +211,21 @@ const TicketDetail = () => {
     }
   };
 
+  const handleExportPdf = () => {
+    if (!ticket || pdfExportLoading) return;
+
+    setPdfExportLoading(true);
+    const originalTitle = document.title;
+    document.title = `Complaint-${ticket.id}`;
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        window.print();
+        document.title = originalTitle;
+        setPdfExportLoading(false);
+      }, 250);
+    });
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "open":
@@ -325,7 +343,7 @@ const TicketDetail = () => {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
+      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0 print-hidden">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
@@ -391,7 +409,7 @@ const TicketDetail = () => {
       {/* ========== MAIN ========== */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0 print-hidden">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(getBackPath())}
@@ -409,6 +427,23 @@ const TicketDetail = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={pdfExportLoading || !ticket}
+              title="Export ticket as PDF"
+              aria-label="Export ticket as PDF"
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+            >
+              {pdfExportLoading ? (
+                <LoaderCircle size={17} className="animate-spin" />
+              ) : (
+                <Printer size={17} />
+              )}
+              <span className="hidden sm:inline text-xs font-semibold">
+                {pdfExportLoading ? "Preparing..." : "Export PDF"}
+              </span>
+            </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
               <Bell size={18} />
             </button>
@@ -424,6 +459,23 @@ const TicketDetail = () => {
             </div>
           </div>
         </header>
+
+        {pdfExportLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/35 px-4 print-hidden">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+                <LoaderCircle size={24} className="animate-spin text-blue-600" />
+              </div>
+              <h2 className="text-base font-bold text-gray-800">Preparing PDF</h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Formatting ticket details, comments and attachments.
+              </p>
+              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-600" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -568,7 +620,7 @@ const TicketDetail = () => {
               <div className="p-5">
                 <form
                   onSubmit={handleAttachmentUpload}
-                  className="flex flex-col sm:flex-row gap-3 mb-5"
+                  className="flex flex-col sm:flex-row gap-3 mb-5 print-hidden"
                 >
                   <label className="flex-1 flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
                     <Paperclip size={18} className="text-blue-600 flex-shrink-0" />
@@ -718,7 +770,7 @@ const TicketDetail = () => {
                 {/* Add Comment */}
                 <form
                   onSubmit={handleCommentSubmit}
-                  className="flex gap-3 mt-4"
+                  className="flex gap-3 mt-4 print-hidden"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {user?.name?.charAt(0).toUpperCase()}

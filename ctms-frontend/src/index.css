@@ -6,3 +6,20 @@ body,
 	height: 100%;
 	overflow: hidden;
 }
+
+@media print {
+	@page {
+		margin: 16mm;
+	}
+
+	html,
+	body,
+	#root {
+		height: auto;
+		overflow: visible;
+	}
+
+	.print-hidden {
+		display: none !important;
+	}
+}
