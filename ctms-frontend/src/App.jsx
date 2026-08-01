@@ -17,11 +17,30 @@ import Profile from "./pages/Profile/Profile";
 import UserManagement from "./pages/Admin/UserManagement";
 import DepartmentManagement from "./pages/Admin/DepartmentManagement";
 import CategoryManagement from "./pages/Admin/CategoryManagement";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "./context/ThemeContext";
+
+function ThemeToggle() {
+  const { isDark, toggleTheme } = useTheme();
+
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-pressed={isDark}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="theme-toggle fixed bottom-5 right-5 z-[60] flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+    >
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
+}
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 text-gray-900 transition-colors duration-200 dark:bg-gray-950 dark:text-gray-100">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" />} />
@@ -125,6 +144,7 @@ function App() {
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
+        <ThemeToggle />
       </div>
     </Router>
   );
