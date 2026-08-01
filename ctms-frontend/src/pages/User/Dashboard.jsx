@@ -292,7 +292,7 @@ const Dashboard = () => {
           {/* My Complaints + Quick Actions */}
           <div className="grid grid-cols-3 gap-4">
             {/* My Complaints Table */}
-            <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="mobile-ticket-table col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-gray-800">My Complaints</h3>
@@ -372,7 +372,7 @@ const Dashboard = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <div className="col-span-1">ID</div>
                 <div className="col-span-2">Title</div>
                 <div className="col-span-1">Status</div>
@@ -409,7 +409,7 @@ const Dashboard = () => {
                   <div
                     key={ticket.id}
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
-                    className="grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
+                    className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
                   >
                     <div className="col-span-1 text-xs text-gray-400 font-mono">
                       #{ticket.id}

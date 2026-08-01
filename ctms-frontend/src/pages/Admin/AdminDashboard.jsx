@@ -520,7 +520,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* All Tickets Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="mobile-ticket-table bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -596,7 +596,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Table Header */}
-            <div className="grid grid-cols-7 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="mobile-ticket-grid-7 grid grid-cols-7 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <div className="col-span-1">ID</div>
               <div className="col-span-2">Title</div>
               <div className="col-span-1">User</div>
@@ -626,7 +626,7 @@ const AdminDashboard = () => {
               paginatedTickets.map((ticket) => (
                 <div
                   key={`${ticket.id}-${ticket.agentId}`}
-                  className="grid grid-cols-7 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
+                  className="mobile-ticket-grid-7 grid grid-cols-7 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
                 >
                   <div className="col-span-1 text-xs text-gray-400 font-mono">
                     #{ticket.id}
