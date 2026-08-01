@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import Pagination from "../../components/Pagination";
+import NotificationBell from "../../components/NotificationBell";
 import {
   LayoutDashboard,
   Users,
@@ -10,7 +11,6 @@ import {
   Tag,
   Ticket,
   BarChart3,
-  Bell,
   Settings,
   LogOut,
   TrendingUp,
@@ -335,12 +335,7 @@ const AdminDashboard = () => {
                 year: "numeric",
               })}
             </div>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-              <Bell size={18} />
-              {stats.open > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -548,7 +543,7 @@ const AdminDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-48"
+                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-48"
                     />
                   </div>
                   <div className="relative">
@@ -562,7 +557,7 @@ const AdminDashboard = () => {
                         setFilterStatus(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer appearance-none"
+                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer appearance-none"
                     >
                       <option value="all">All Status</option>
                       <option value="open">Open</option>
@@ -579,7 +574,7 @@ const AdminDashboard = () => {
                       setCurrentPage(1);
                     }}
                     aria-label="Filter complaints by priority"
-                    className="px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                    className="filter-control px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
                   >
                     <option value="all">All Priority</option>
                     <option value="critical">Critical</option>
@@ -591,7 +586,7 @@ const AdminDashboard = () => {
                     <button
                       type="button"
                       onClick={clearFilters}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                      className="filter-action px-3 py-2 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
                     >
                       Clear
                     </button>

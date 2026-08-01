@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import Pagination from "../../components/Pagination";
+import NotificationBell from "../../components/NotificationBell";
 import {
   LayoutDashboard,
   Ticket,
@@ -10,7 +11,6 @@ import {
   Clock,
   AlertCircle,
   LogOut,
-  Bell,
   TrendingUp,
   UserCog,
   Activity,
@@ -255,12 +255,7 @@ const AgentPanel = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-              {stats.open > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
               <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -356,7 +351,7 @@ const AgentPanel = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 w-32"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 w-32"
                     />
                   </div>
                   <div className="relative">
@@ -370,7 +365,7 @@ const AgentPanel = () => {
                         setFilterStatus(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
                     >
                       <option value="all">All Status</option>
                       <option value="open">Open</option>
@@ -387,7 +382,7 @@ const AgentPanel = () => {
                       setCurrentPage(1);
                     }}
                     aria-label="Filter assigned complaints by priority"
-                    className="px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
+                    className="filter-control px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
                   >
                     <option value="all">All Priority</option>
                     <option value="critical">Critical</option>
@@ -399,7 +394,7 @@ const AgentPanel = () => {
                     <button
                       type="button"
                       onClick={clearFilters}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                      className="filter-action px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
                     >
                       Clear
                     </button>
