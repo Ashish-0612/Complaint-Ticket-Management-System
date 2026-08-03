@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import Pagination from "../../components/Pagination";
@@ -26,8 +26,9 @@ import {
   Legend,
 } from "recharts";
 
-const AgentPanel = () => {
+const AgentPanel = ({ view = "dashboard" }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   const [tickets, setTickets] = useState([]);
@@ -170,11 +171,24 @@ const AgentPanel = () => {
     { name: "Resolved", value: stats.resolved, color: "#22c55e" },
   ].filter((d) => d.value > 0);
 
+  const pageTitle =
+    view === "assigned"
+      ? "Assigned Complaints"
+      : view === "all"
+        ? "All Complaints"
+        : "Agent Dashboard";
+  const pageSubtitle =
+    view === "assigned"
+      ? "Tickets currently assigned to you"
+      : view === "all"
+        ? "Review your complete complaint queue"
+        : `Welcome back, ${user?.name}!`;
+
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true, path: "/agent" },
-    { icon: Ticket, label: "Assigned Complaints", path: "/agent" },
-    { icon: CheckCircle, label: "All Complaints", path: "/agent" },
-    { icon: Activity, label: "My Activity", path: "/agent" },
+    { icon: Ticket, label: "Assigned Complaints", path: "/agent/assigned" },
+    { icon: CheckCircle, label: "All Complaints", path: "/agent/all" },
+    { icon: Activity, label: "My Activity", path: "/agent/activity" },
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
@@ -208,7 +222,8 @@ const AgentPanel = () => {
                 <button
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    item.active
+                    (item.path === location.pathname ||
+                      (item.path === "/agent" && location.pathname === "/agent"))
                       ? "bg-green-600 text-white"
                       : "text-gray-400 hover:bg-gray-800 hover:text-white"
                   }`}
@@ -249,10 +264,8 @@ const AgentPanel = () => {
         {/* Top Navbar */}
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Agent Dashboard</h1>
-            <p className="text-gray-500 text-sm">
-              Welcome back, {user?.name}! 👋
-            </p>
+            <h1 className="text-xl font-bold text-gray-800">{pageTitle}</h1>
+            <p className="text-gray-500 text-sm">{pageSubtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             <NotificationBell tickets={tickets} />
@@ -331,10 +344,10 @@ const AgentPanel = () => {
               <div className="p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-gray-800">
-                    My Assigned Complaints
+                    {view === "all" ? "All Complaints" : "My Assigned Complaints"}
                   </h3>
                   <p className="text-gray-500 text-xs mt-0.5">
-                    {filteredTickets.length} of {tickets.length} complaints assigned
+                    {filteredTickets.length} of {tickets.length} complaints in queue
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
