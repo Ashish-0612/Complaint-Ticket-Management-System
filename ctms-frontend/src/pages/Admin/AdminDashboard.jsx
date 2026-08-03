@@ -21,6 +21,8 @@ import {
   Search,
   Filter,
   Trash2,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   LineChart,
@@ -44,6 +46,7 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -52,17 +55,6 @@ const AdminDashboard = () => {
     closed: 0,
   });
   const [chartData, setChartData] = useState([]);
-
-  // Dummy chart data — real data baad mein add karenge
-  // const chartData = [
-  //   { day: "Mon", Total: 4, Resolved: 2, Pending: 2 },
-  //   { day: "Tue", Total: 6, Resolved: 3, Pending: 3 },
-  //   { day: "Wed", Total: 5, Resolved: 4, Pending: 1 },
-  //   { day: "Thu", Total: 8, Resolved: 5, Pending: 3 },
-  //   { day: "Fri", Total: 7, Resolved: 4, Pending: 3 },
-  //   { day: "Sat", Total: 3, Resolved: 2, Pending: 1 },
-  //   { day: "Sun", Total: 5, Resolved: 3, Pending: 2 },
-  // ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,17 +74,14 @@ const AdminDashboard = () => {
           resolved: allTickets.filter((t) => t.status === "resolved").length,
           closed: allTickets.filter((t) => t.status === "closed").length,
         });
-        // Real chart data — last 7 days
         const last7Days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const today = new Date().getDay();
 
-        // Last 7 days order banao
         const orderedDays = [];
         for (let i = 6; i >= 0; i--) {
           orderedDays.push(last7Days[(today - i + 7) % 7]);
         }
 
-        // Tickets ko day wise group karo
         const chartResult = orderedDays.map((day) => {
           const dayTickets = allTickets.filter((t) => {
             const ticketDay = new Date(t.createdAt).toLocaleDateString(
@@ -179,8 +168,10 @@ const AdminDashboard = () => {
       setStats({
         total: updated.length,
         open: updated.filter((ticket) => ticket.status === "open").length,
-        inProgress: updated.filter((ticket) => ticket.status === "in-progress").length,
-        resolved: updated.filter((ticket) => ticket.status === "resolved").length,
+        inProgress: updated.filter((ticket) => ticket.status === "in-progress")
+          .length,
+        resolved: updated.filter((ticket) => ticket.status === "resolved")
+          .length,
         closed: updated.filter((ticket) => ticket.status === "closed").length,
       });
     } catch (err) {
@@ -201,7 +192,10 @@ const AdminDashboard = () => {
     return matchSearch && matchStatus && matchPriority;
   });
   const ticketsPerPage = 5;
-  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTickets.length / ticketsPerPage),
+  );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedTickets = filteredTickets.slice(
     (safeCurrentPage - 1) * ticketsPerPage,
@@ -242,7 +236,11 @@ const AdminDashboard = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true, path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
+    {
+      icon: UserCog,
+      label: "Agent Performance",
+      path: "/admin/agents/performance",
+    },
     { icon: Tag, label: "Categories", path: "/admin/categories" },
     { icon: Tag, label: "Departments", path: "/admin/departments" },
     { icon: BarChart3, label: "Reports", path: "/admin/reports" },
@@ -250,84 +248,130 @@ const AdminDashboard = () => {
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
+  const SidebarInner = (
+    <>
+      {/* Logo */}
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {navItems.map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                  item.active
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* User + Logout */}
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs truncate">Admin</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">
-                Complaint
-              </p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      {/* ========== MOBILE TOP BAR (below md) ========== */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Admin Panel</p>
+        <div className="w-11" />
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {navItems.map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    item.active
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      {/* ========== DESKTOP SIDEBAR ========== */}
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0">
+        {SidebarInner}
+      </aside>
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">
-                {user?.name}
-              </p>
-              <p className="text-gray-500 text-xs truncate">Admin</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      {/* ========== MOBILE DRAWER ========== */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
       </aside>
 
       {/* ========== MAIN ========== */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
         {/* Top Navbar */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
-            <p className="text-gray-500 text-sm">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-500 text-xs sm:text-sm truncate">
               Welcome back, {user?.name}! 👋
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg items-center gap-1.5">
               <Clock size={13} />
               {new Date().toLocaleDateString("en-US", {
                 day: "numeric",
@@ -336,11 +380,11 @@ const AdminDashboard = () => {
               })}
             </div>
             <NotificationBell tickets={tickets} />
-            <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="hidden sm:inline text-sm font-medium text-gray-700">
                 {user?.name}
               </span>
             </div>
@@ -348,9 +392,9 @@ const AdminDashboard = () => {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
             {[
               {
                 label: "Total Complaints",
@@ -400,13 +444,13 @@ const AdminDashboard = () => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div
-                    className={`w-10 h-10 ${stat.color} rounded-xl flex items-center justify-center`}
+                    className={`w-9 h-9 sm:w-10 sm:h-10 ${stat.color} rounded-xl flex items-center justify-center`}
                   >
-                    <stat.icon size={20} className={stat.iconColor} />
+                    <stat.icon size={18} className={stat.iconColor} />
                   </div>
                   <span
                     className={`text-xs font-semibold flex items-center gap-0.5 ${stat.up ? "text-green-600" : "text-red-500"}`}
@@ -419,18 +463,22 @@ const AdminDashboard = () => {
                     {stat.trend}
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">
+                  {stat.value}
+                </p>
                 <p className="text-gray-500 text-xs mt-1">{stat.label}</p>
-                <p className="text-gray-400 text-xs mt-0.5">from last week</p>
+                <p className="text-gray-400 text-xs mt-0.5 hidden sm:block">
+                  from last week
+                </p>
               </div>
             ))}
           </div>
 
           {/* Chart + Recent Tickets */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             {/* Line Chart */}
-            <div className="col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
                 <h3 className="font-bold text-gray-800">Complaints Overview</h3>
                 <div className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg">
                   This Week ▾
@@ -484,7 +532,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Recent Complaints */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm min-w-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-800 text-sm">
                   Recent Complaints
@@ -520,17 +568,17 @@ const AdminDashboard = () => {
           </div>
 
           {/* All Tickets Table */}
-          <div className="mobile-ticket-table bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100">
-              <div className="flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-gray-800">All Complaints</h3>
                   <p className="text-gray-500 text-xs mt-0.5">
                     {filteredTickets.length} complaints found
                   </p>
                 </div>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <div className="relative">
+                <div className="flex flex-wrap justify-start sm:justify-end gap-2">
+                  <div className="relative flex-1 sm:flex-none min-w-[140px]">
                     <Search
                       size={14}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -543,10 +591,10 @@ const AdminDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-48"
+                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-full sm:w-48"
                     />
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none min-w-[120px]">
                     <Filter
                       size={14}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -557,7 +605,7 @@ const AdminDashboard = () => {
                         setFilterStatus(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer appearance-none"
+                      className="filter-control pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer appearance-none w-full"
                     >
                       <option value="all">All Status</option>
                       <option value="open">Open</option>
@@ -574,7 +622,7 @@ const AdminDashboard = () => {
                       setCurrentPage(1);
                     }}
                     aria-label="Filter complaints by priority"
-                    className="filter-control px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                    className="filter-control px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer flex-1 sm:flex-none min-w-[110px]"
                   >
                     <option value="all">All Priority</option>
                     <option value="critical">Critical</option>
@@ -595,123 +643,128 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Table Header */}
-            <div className="mobile-ticket-grid-7 grid grid-cols-7 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">Title</div>
-              <div className="col-span-1">User</div>
-              <div className="col-span-1">Status</div>
-              <div className="col-span-1">Priority</div>
-              <div className="col-span-1">Actions</div>
-            </div>
-
-            {/* Loading */}
-            {loading && (
-              <div className="text-center py-12">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-gray-500 text-sm">Loading...</p>
-              </div>
-            )}
-
-            {/* Empty */}
-            {!loading && filteredTickets.length === 0 && (
-              <div className="text-center py-12">
-                <Ticket size={40} className="text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No complaints found</p>
-              </div>
-            )}
-
-            {/* Rows */}
-            {!loading &&
-              paginatedTickets.map((ticket) => (
-                <div
-                  key={`${ticket.id}-${ticket.agentId}`}
-                  className="mobile-ticket-grid-7 grid grid-cols-7 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
-                >
-                  <div className="col-span-1 text-xs text-gray-400 font-mono">
-                    #{ticket.id}
-                  </div>
-                  <div
-                    className="col-span-2 cursor-pointer"
-                    onClick={() => navigate(`/tickets/${ticket.id}`)}
-                  >
-                    <p className="text-sm font-semibold text-gray-800 hover:text-blue-600 transition-colors truncate">
-                      {ticket.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {ticket.department?.name}
-                    </p>
-                  </div>
-                  <div className="col-span-1">
-                    <p className="text-xs text-gray-700 font-medium truncate">
-                      {ticket.creator?.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(ticket.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="col-span-1">
-                    <select
-                      value={ticket.status}
-                      onChange={(e) =>
-                        handleStatusChange(ticket.id, e.target.value)
-                      }
-                      className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getStatusBadge(ticket.status)}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <option value="open">Open</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
-                    </select>
-                  </div>
-                  <div className="col-span-1">
-                    <select
-                      value={ticket.priority}
-                      onChange={(e) =>
-                        handlePriorityChange(ticket.id, e.target.value)
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Change priority for complaint ${ticket.id}`}
-                      className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getPriorityBadge(ticket.priority)}`}
-                    >
-                      <option value="critical">Critical</option>
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <div className="col-span-1 flex items-center gap-2">
-                    <select
-                      value={ticket.agentId || ""}
-                      onChange={(e) =>
-                        handleAgentAssign(ticket.id, e.target.value)
-                      }
-                      className="action-select min-w-0 flex-1 text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <option value="">Unassigned</option>
-                      {agents.map((agent) => (
-                        <option key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTicketDelete(ticket.id);
-                      }}
-                      title="Delete complaint"
-                      aria-label={`Delete complaint ${ticket.id}`}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+            {/* Table wrapper - horizontal scroll on small screens, keeps grid layout intact */}
+            <div className="overflow-x-auto">
+              <div className="min-w-[760px]">
+                {/* Table Header */}
+                <div className="grid grid-cols-7 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="col-span-1">ID</div>
+                  <div className="col-span-2">Title</div>
+                  <div className="col-span-1">User</div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-1">Priority</div>
+                  <div className="col-span-1">Actions</div>
                 </div>
-              ))}
+
+                {/* Loading */}
+                {loading && (
+                  <div className="text-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-gray-500 text-sm">Loading...</p>
+                  </div>
+                )}
+
+                {/* Empty */}
+                {!loading && filteredTickets.length === 0 && (
+                  <div className="text-center py-12">
+                    <Ticket size={40} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">No complaints found</p>
+                  </div>
+                )}
+
+                {/* Rows */}
+                {!loading &&
+                  paginatedTickets.map((ticket) => (
+                    <div
+                      key={`${ticket.id}-${ticket.agentId}`}
+                      className="grid grid-cols-7 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
+                    >
+                      <div className="col-span-1 text-xs text-gray-400 font-mono">
+                        #{ticket.id}
+                      </div>
+                      <div
+                        className="col-span-2 cursor-pointer"
+                        onClick={() => navigate(`/tickets/${ticket.id}`)}
+                      >
+                        <p className="text-sm font-semibold text-gray-800 hover:text-blue-600 transition-colors truncate">
+                          {ticket.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {ticket.department?.name}
+                        </p>
+                      </div>
+                      <div className="col-span-1">
+                        <p className="text-xs text-gray-700 font-medium truncate">
+                          {ticket.creator?.name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(ticket.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="col-span-1">
+                        <select
+                          value={ticket.status}
+                          onChange={(e) =>
+                            handleStatusChange(ticket.id, e.target.value)
+                          }
+                          className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getStatusBadge(ticket.status)}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <option value="open">Open</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+                      <div className="col-span-1">
+                        <select
+                          value={ticket.priority}
+                          onChange={(e) =>
+                            handlePriorityChange(ticket.id, e.target.value)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Change priority for complaint ${ticket.id}`}
+                          className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getPriorityBadge(ticket.priority)}`}
+                        >
+                          <option value="critical">Critical</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                        </select>
+                      </div>
+                      <div className="col-span-1 flex items-center gap-2">
+                        <select
+                          value={ticket.agentId || ""}
+                          onChange={(e) =>
+                            handleAgentAssign(ticket.id, e.target.value)
+                          }
+                          className="action-select min-w-0 flex-1 text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <option value="">Unassigned</option>
+                          {agents.map((agent) => (
+                            <option key={agent.id} value={agent.id}>
+                              {agent.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTicketDelete(ticket.id);
+                          }}
+                          title="Delete complaint"
+                          aria-label={`Delete complaint ${ticket.id}`}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
             <Pagination
               currentPage={safeCurrentPage}
               totalPages={totalPages}

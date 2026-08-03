@@ -36,12 +36,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-3 sm:p-4">
       <div
-        className="auth-card bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex"
+        className="auth-card bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex"
         style={{ minHeight: "560px" }}
       >
-        {/* ===== LEFT — Illustration ===== */}
+        {/* ===== LEFT — Illustration (desktop only) ===== */}
         <div
           className="auth-illustration hidden md:flex w-2/5 flex-col justify-between p-10"
           style={{
@@ -63,14 +63,12 @@ const Login = () => {
               Sign in to manage and track your complaints easily.
             </p>
 
-            {/* SVG Illustration */}
             <svg
               viewBox="0 0 300 280"
               className="w-full max-w-xs mx-auto"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              {/* Background blob */}
               <ellipse
                 cx="150"
                 cy="240"
@@ -84,8 +82,6 @@ const Login = () => {
                 fill="#dbeafe"
                 opacity="0.6"
               />
-
-              {/* Clipboard */}
               <rect
                 x="95"
                 y="60"
@@ -118,8 +114,6 @@ const Login = () => {
                 rx="4"
                 fill="white"
               />
-
-              {/* Clipboard content */}
               <text
                 x="120"
                 y="105"
@@ -129,8 +123,6 @@ const Login = () => {
               >
                 COMPLAINT
               </text>
-
-              {/* Checkboxes */}
               {[120, 140, 160, 180].map((y, i) => (
                 <g key={i}>
                   <rect
@@ -169,8 +161,6 @@ const Login = () => {
                   )}
                 </g>
               ))}
-
-              {/* Big checkmark circle */}
               <circle cx="190" cy="195" r="22" fill="#2563eb" />
               <path
                 d="M180 195 L187 202 L202 186"
@@ -179,8 +169,6 @@ const Login = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-
-              {/* Person */}
               <circle cx="75" cy="130" r="16" fill="#fbbf24" />
               <rect
                 x="60"
@@ -214,8 +202,6 @@ const Login = () => {
                 strokeWidth="10"
                 strokeLinecap="round"
               />
-
-              {/* Leaves */}
               <ellipse
                 cx="245"
                 cy="220"
@@ -247,9 +233,11 @@ const Login = () => {
         </div>
 
         {/* ===== RIGHT — Form ===== */}
-        <div className="auth-form w-full md:w-3/5 flex flex-col justify-center p-10">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Sign In</h1>
+        <div className="auth-form w-full md:w-3/5 flex flex-col justify-center p-6 sm:p-8 lg:p-10">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+              Sign In
+            </h1>
             <p className="text-gray-500 text-sm">
               Enter your credentials to continue
             </p>
@@ -318,7 +306,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-100 min-h-[44px]"
             >
               {loading ? (
                 <>

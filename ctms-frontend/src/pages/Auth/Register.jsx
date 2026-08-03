@@ -57,7 +57,7 @@ const Register = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-500" />
@@ -72,9 +72,9 @@ const Register = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
-      <div className="auth-card bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex">
-        {/* ===== LEFT — Illustration ===== */}
+    <div className="min-h-screen sm:h-screen bg-gray-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto sm:overflow-hidden">
+      <div className="auth-card bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden w-full max-w-4xl flex my-4 sm:my-0">
+        {/* ===== LEFT — Illustration (desktop only) ===== */}
         <div
           className="auth-illustration hidden md:flex w-2/5 flex-col justify-between p-10"
           style={{
@@ -96,14 +96,12 @@ const Register = () => {
               Create an account to manage and track your complaints easily.
             </p>
 
-            {/* SVG Illustration */}
             <svg
               viewBox="0 0 300 280"
               className="w-full max-w-xs mx-auto"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              {/* Background blob */}
               <ellipse
                 cx="150"
                 cy="240"
@@ -117,8 +115,6 @@ const Register = () => {
                 fill="#dbeafe"
                 opacity="0.6"
               />
-
-              {/* Clipboard */}
               <rect
                 x="95"
                 y="60"
@@ -151,8 +147,6 @@ const Register = () => {
                 rx="4"
                 fill="white"
               />
-
-              {/* Clipboard content */}
               <text
                 x="120"
                 y="105"
@@ -162,8 +156,6 @@ const Register = () => {
               >
                 COMPLAINT
               </text>
-
-              {/* Checkboxes */}
               {[120, 140, 160, 180].map((y, i) => (
                 <g key={i}>
                   <rect
@@ -202,8 +194,6 @@ const Register = () => {
                   )}
                 </g>
               ))}
-
-              {/* Big checkmark circle */}
               <circle cx="190" cy="195" r="22" fill="#2563eb" />
               <path
                 d="M180 195 L187 202 L202 186"
@@ -212,11 +202,7 @@ const Register = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-
-              {/* Person */}
-              {/* Head */}
               <circle cx="75" cy="130" r="16" fill="#fbbf24" />
-              {/* Body */}
               <rect
                 x="60"
                 y="146"
@@ -225,7 +211,6 @@ const Register = () => {
                 rx="8"
                 fill="#2563eb"
               />
-              {/* Legs */}
               <rect
                 x="63"
                 y="196"
@@ -242,18 +227,14 @@ const Register = () => {
                 rx="5"
                 fill="#1e293b"
               />
-              {/* Shoes */}
               <ellipse cx="68" cy="231" rx="8" ry="5" fill="#0f172a" />
               <ellipse cx="82" cy="231" rx="8" ry="5" fill="#0f172a" />
-              {/* Arm pointing */}
               <path
                 d="M90 160 Q110 150 125 155"
                 stroke="#2563eb"
                 strokeWidth="10"
                 strokeLinecap="round"
               />
-
-              {/* Leaves */}
               <ellipse
                 cx="245"
                 cy="220"
@@ -285,9 +266,9 @@ const Register = () => {
         </div>
 
         {/* ===== RIGHT — Form ===== */}
-        <div className="w-full md:w-3/5 flex flex-col justify-center p-10">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        <div className="w-full md:w-3/5 flex flex-col justify-center p-6 sm:p-8 lg:p-10">
+          <div className="mb-5 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
               Create Your Account
             </h1>
             <p className="text-gray-500 text-sm">Sign up to get started</p>
@@ -435,13 +416,13 @@ const Register = () => {
                 <option value="agent">Agent — Handle assigned tickets</option>
                 <option value="admin">Admin — Assign Tickets to Agent</option>
               </select>
-            </div> 
+            </div>
 
-            {/* Submit */} 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2 shadow-lg shadow-blue-100"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2 shadow-lg shadow-blue-100 min-h-[44px]"
             >
               {loading ? (
                 <>

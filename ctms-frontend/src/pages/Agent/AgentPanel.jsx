@@ -16,6 +16,8 @@ import {
   Activity,
   Search,
   Filter,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   PieChart,
@@ -37,6 +39,7 @@ const AgentPanel = ({ view = "dashboard" }) => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -110,12 +113,17 @@ const AgentPanel = ({ view = "dashboard" }) => {
       ticket.title?.toLowerCase().includes(searchValue) ||
       ticket.description?.toLowerCase().includes(searchValue) ||
       ticket.creator?.name?.toLowerCase().includes(searchValue);
-    const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
-    const matchesPriority = filterPriority === "all" || ticket.priority === filterPriority;
+    const matchesStatus =
+      filterStatus === "all" || ticket.status === filterStatus;
+    const matchesPriority =
+      filterPriority === "all" || ticket.priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
   const ticketsPerPage = 5;
-  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ticketsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTickets.length / ticketsPerPage),
+  );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedTickets = filteredTickets.slice(
     (safeCurrentPage - 1) * ticketsPerPage,
@@ -164,7 +172,6 @@ const AgentPanel = ({ view = "dashboard" }) => {
     }
   };
 
-  // Pie chart data
   const pieData = [
     { name: "In Progress", value: stats.inProgress, color: "#f59e0b" },
     { name: "Pending", value: stats.open, color: "#f97316" },
@@ -192,99 +199,142 @@ const AgentPanel = ({ view = "dashboard" }) => {
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
+  const SidebarInner = (
+    <>
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {navItems.map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                  item.path === location.pathname ||
+                  (item.path === "/agent" && location.pathname === "/agent")
+                    ? "bg-green-600 text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs">Agent</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">
-                Complaint
-              </p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Agent Panel</p>
+        <div className="w-11" />
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {navItems.map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    (item.path === location.pathname ||
-                      (item.path === "/agent" && location.pathname === "/agent"))
-                      ? "bg-green-600 text-white"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0">
+        {SidebarInner}
+      </aside>
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">
-                {user?.name}
-              </p>
-              <p className="text-gray-500 text-xs">Agent</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      {/* Mobile drawer */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
       </aside>
 
       {/* ========== MAIN ========== */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">{pageTitle}</h1>
-            <p className="text-gray-500 text-sm">{pageSubtitle}</p>
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+              {pageTitle}
+            </h1>
+            <p className="text-gray-500 text-xs sm:text-sm truncate">
+              {pageSubtitle}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell tickets={tickets} />
-            <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
-              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg">
+              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="hidden sm:inline text-sm font-medium text-gray-700">
                 {user?.name}
               </span>
-              <span className="text-xs text-gray-400">▾</span>
+              <span className="hidden sm:inline text-xs text-gray-400">▾</span>
             </div>
           </div>
         </header>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             {[
               {
                 label: "Assigned to Me",
@@ -321,14 +371,16 @@ const AgentPanel = ({ view = "dashboard" }) => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm"
               >
                 <div
-                  className={`w-10 h-10 ${stat.color} rounded-xl flex items-center justify-center mb-3`}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 ${stat.color} rounded-xl flex items-center justify-center mb-3`}
                 >
-                  <stat.icon size={20} className={stat.iconColor} />
+                  <stat.icon size={18} className={stat.iconColor} />
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">
+                  {stat.value}
+                </p>
                 <p className="text-gray-700 text-sm font-medium mt-1">
                   {stat.label}
                 </p>
@@ -338,20 +390,23 @@ const AgentPanel = ({ view = "dashboard" }) => {
           </div>
 
           {/* Tickets Table + Pie Chart */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Assigned Tickets Table */}
-            <div className="mobile-ticket-table col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-gray-800">
-                    {view === "all" ? "All Complaints" : "My Assigned Complaints"}
+                    {view === "all"
+                      ? "All Complaints"
+                      : "My Assigned Complaints"}
                   </h3>
                   <p className="text-gray-500 text-xs mt-0.5">
-                    {filteredTickets.length} of {tickets.length} complaints in queue
+                    {filteredTickets.length} of {tickets.length} complaints in
+                    queue
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <div className="relative">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative flex-1 sm:flex-none min-w-[110px]">
                     <Search
                       size={13}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -364,10 +419,10 @@ const AgentPanel = ({ view = "dashboard" }) => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 w-32"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 w-full sm:w-32"
                     />
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none min-w-[110px]">
                     <Filter
                       size={13}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -378,7 +433,7 @@ const AgentPanel = ({ view = "dashboard" }) => {
                         setFilterStatus(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
+                      className="filter-control pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer w-full"
                     >
                       <option value="all">All Status</option>
                       <option value="open">Open</option>
@@ -395,7 +450,7 @@ const AgentPanel = ({ view = "dashboard" }) => {
                       setCurrentPage(1);
                     }}
                     aria-label="Filter assigned complaints by priority"
-                    className="filter-control px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer"
+                    className="filter-control px-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-green-400 bg-white cursor-pointer flex-1 sm:flex-none min-w-[100px]"
                   >
                     <option value="all">All Priority</option>
                     <option value="critical">Critical</option>
@@ -415,91 +470,97 @@ const AgentPanel = ({ view = "dashboard" }) => {
                 </div>
               </div>
 
-              {/* Table Header */}
-              <div className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                <div className="col-span-1">ID</div>
-                <div className="col-span-2">Title</div>
-                <div className="col-span-1">Status</div>
-                <div className="col-span-1">Priority</div>
-              </div>
-
-              {loading && (
-                <div className="text-center py-10">
-                  <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-gray-500 text-sm">Loading...</p>
-                </div>
-              )}
-
-              {!loading && filteredTickets.length === 0 && (
-                <div className="text-center py-10">
-                  <Ticket size={36} className="text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">
-                    {tickets.length === 0
-                      ? "No tickets assigned yet!"
-                      : "No tickets match these filters."}
-                  </p>
-                  {tickets.length === 0 && (
-                    <p className="text-gray-400 text-xs mt-1">
-                      Admin will assign tickets soon.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {!loading &&
-                paginatedTickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="mobile-ticket-grid-5 grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
-                  >
-                    <div className="col-span-1 text-xs text-gray-400 font-mono">
-                      #{ticket.id}
-                    </div>
-                    <div
-                      className="col-span-2"
-                      onClick={() => navigate(`/tickets/${ticket.id}`)}
-                    >
-                      <p className="text-sm font-semibold text-gray-800 group-hover:text-green-600 transition-colors truncate">
-                        {ticket.title}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {ticket.creator?.name} ·{" "}
-                        {new Date(ticket.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="col-span-1">
-                      <select
-                        value={ticket.status}
-                        onChange={(e) =>
-                          handleStatusChange(ticket.id, e.target.value)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getStatusBadge(ticket.status)}`}
-                      >
-                        <option value="open">Open</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                      </select>
-                    </div>
-                    <div className="col-span-1">
-                      <select
-                        value={ticket.priority}
-                        onChange={(e) =>
-                          handlePriorityChange(ticket.id, e.target.value)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Change priority for complaint ${ticket.id}`}
-                        className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getPriorityBadge(ticket.priority)}`}
-                      >
-                        <option value="critical">Critical</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                      </select>
-                    </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[560px]">
+                  <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="col-span-1">ID</div>
+                    <div className="col-span-2">Title</div>
+                    <div className="col-span-1">Status</div>
+                    <div className="col-span-1">Priority</div>
                   </div>
-                ))}
+
+                  {loading && (
+                    <div className="text-center py-10">
+                      <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-gray-500 text-sm">Loading...</p>
+                    </div>
+                  )}
+
+                  {!loading && filteredTickets.length === 0 && (
+                    <div className="text-center py-10">
+                      <Ticket
+                        size={36}
+                        className="text-gray-200 mx-auto mb-3"
+                      />
+                      <p className="text-gray-500 text-sm">
+                        {tickets.length === 0
+                          ? "No tickets assigned yet!"
+                          : "No tickets match these filters."}
+                      </p>
+                      {tickets.length === 0 && (
+                        <p className="text-gray-400 text-xs mt-1">
+                          Admin will assign tickets soon.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {!loading &&
+                    paginatedTickets.map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        className="grid grid-cols-5 gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50 transition-all items-center cursor-pointer group"
+                      >
+                        <div className="col-span-1 text-xs text-gray-400 font-mono">
+                          #{ticket.id}
+                        </div>
+                        <div
+                          className="col-span-2"
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                        >
+                          <p className="text-sm font-semibold text-gray-800 group-hover:text-green-600 transition-colors truncate">
+                            {ticket.title}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {ticket.creator?.name} ·{" "}
+                            {new Date(ticket.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="col-span-1">
+                          <select
+                            value={ticket.status}
+                            onChange={(e) =>
+                              handleStatusChange(ticket.id, e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getStatusBadge(ticket.status)}`}
+                          >
+                            <option value="open">Open</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                          </select>
+                        </div>
+                        <div className="col-span-1">
+                          <select
+                            value={ticket.priority}
+                            onChange={(e) =>
+                              handlePriorityChange(ticket.id, e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Change priority for complaint ${ticket.id}`}
+                            className={`text-xs px-2 py-1 rounded-lg font-medium border-0 outline-none cursor-pointer ${getPriorityBadge(ticket.priority)}`}
+                          >
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
               <Pagination
                 currentPage={safeCurrentPage}
                 totalPages={totalPages}
@@ -509,8 +570,7 @@ const AgentPanel = ({ view = "dashboard" }) => {
 
             {/* Right Side — Pie Chart + Activity */}
             <div className="flex flex-col gap-4">
-              {/* Pie Chart */}
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-gray-800 text-sm mb-4">
                   Status Distribution
                 </h3>
@@ -547,8 +607,7 @@ const AgentPanel = ({ view = "dashboard" }) => {
                 )}
               </div>
 
-              {/* Recent Activity */}
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1">
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm flex-1">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-800 text-sm">
                     Recent Activity
