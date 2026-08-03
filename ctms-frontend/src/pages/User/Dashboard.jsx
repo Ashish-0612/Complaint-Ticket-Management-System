@@ -37,6 +37,7 @@ const Dashboard = () => {
     inProgress: 0,
     resolved: 0,
   });
+  console.log("mobileMenuOpen =", mobileMenuOpen);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -206,7 +207,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50">
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
         <button

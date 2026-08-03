@@ -163,7 +163,7 @@ const Sidebar = () => {
 
       {/* Mobile drawer panel */}
       <div
-        className={`fixed left-0 top-0 z-50 h-screen transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed left-0 top-0 z-[9999] h-screen w-64 bg-gray-900 md:hidden transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
