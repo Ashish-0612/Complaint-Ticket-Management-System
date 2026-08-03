@@ -15,7 +15,7 @@ const WorkspacePage = ({ mode }) => {
         .then((response) => setTickets(response.data.data || []))
         .catch(() => setTickets([]));
     }
-  }, [mode]);
+  }, [mode]); 
 
   const config = {
     announcements: { title: "Announcements", subtitle: "Latest updates from the support team", icon: Bell },
