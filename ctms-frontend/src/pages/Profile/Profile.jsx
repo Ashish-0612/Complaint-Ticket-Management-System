@@ -129,7 +129,7 @@ const Profile = () => {
         { icon: Ticket, label: "Complaints", path: "/admin" },
         { icon: BarChart3, label: "Reports", path: "/admin" },
         { icon: UserCog, label: "Profile", path: "/profile", active: true },
-        { icon: Settings, label: "Settings", path: "/profile" },
+        { icon: Settings, label: "Settings", path: "/settings" },
       ];
     if (user?.role === "agent")
       return [

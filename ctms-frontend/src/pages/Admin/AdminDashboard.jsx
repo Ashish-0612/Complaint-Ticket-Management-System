@@ -245,8 +245,8 @@ const AdminDashboard = () => {
     { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
     { icon: Tag, label: "Categories", path: "/admin/categories" },
     { icon: Tag, label: "Departments", path: "/admin/departments" },
-    { icon: BarChart3, label: "Reports", path: "/admin" },
-    { icon: Settings, label: "Settings", path: "/admin" },
+    { icon: BarChart3, label: "Reports", path: "/admin/reports" },
+    { icon: Settings, label: "Settings", path: "/settings" },
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
@@ -687,7 +687,7 @@ const AdminDashboard = () => {
                       onChange={(e) =>
                         handleAgentAssign(ticket.id, e.target.value)
                       }
-                      className="min-w-0 flex-1 text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
+                      className="action-select min-w-0 flex-1 text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <option value="">Unassigned</option>

@@ -18,6 +18,7 @@ import UserManagement from "./pages/Admin/UserManagement";
 import DepartmentManagement from "./pages/Admin/DepartmentManagement";
 import CategoryManagement from "./pages/Admin/CategoryManagement";
 import TrackStatus from "./pages/User/TrackStatus";
+import WorkspacePage from "./pages/WorkspacePage";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "./context/ThemeContext";
 
@@ -85,6 +86,11 @@ function App() {
             }
           />
 
+          <Route path="/announcements" element={<ProtectedRoute allowedRoles={["user", "admin", "agent"]}><WorkspacePage mode="announcements" /></ProtectedRoute>} />
+          <Route path="/agent/activity" element={<ProtectedRoute allowedRoles={["agent", "admin"]}><WorkspacePage mode="activity" /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={["admin"]}><WorkspacePage mode="reports" /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute allowedRoles={["user", "admin", "agent"]}><WorkspacePage mode="settings" /></ProtectedRoute>} />
+
           {/* Profile route */}
           <Route
             path="/profile"
@@ -147,6 +153,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["agent", "admin"]}>
                 <AgentPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/assigned"
+            element={
+              <ProtectedRoute allowedRoles={["agent", "admin"]}>
+                <AgentPanel view="assigned" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/all"
+            element={
+              <ProtectedRoute allowedRoles={["agent", "admin"]}>
+                <AgentPanel view="all" />
               </ProtectedRoute>
             }
           />

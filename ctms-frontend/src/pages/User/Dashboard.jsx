@@ -126,7 +126,7 @@ const Dashboard = () => {
     { icon: LayoutDashboard, label: "Dashboard", active: true },
     { icon: Ticket, label: "My Complaints" },
     { icon: PlusCircle, label: "New Complaint" },
-    { icon: Activity, label: "Announcements" },
+    { icon: Activity, label: "Announcements", path: "/announcements" },
     { icon: FileText, label: "Profile" },
   ];
 
@@ -166,7 +166,7 @@ const Dashboard = () => {
                     else if (item.label === "Dashboard") navigate("/dashboard");
                     else if (item.label === "Profile") navigate("/profile");
                     else if (item.label === "Announcements")
-                      navigate("/dashboard");
+                      navigate(item.path);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                     item.active
