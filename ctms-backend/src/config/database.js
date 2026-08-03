@@ -1,5 +1,4 @@
 const { Sequelize } = require("sequelize");
-const tedious = require("tedious");
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -8,13 +7,12 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    dialect: "mssql",
-    dialectModule: tedious,
+    dialect: "postgres",
     logging: false,
     dialectOptions: {
-      options: {
-        encrypt: false,
-        trustServerCertificate: true,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
       },
     },
   },
@@ -23,7 +21,7 @@ const sequelize = new Sequelize(
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ SQL Server connected successfully!");
+    console.log("✅ PostgreSQL connected successfully!");
   } catch (error) {
     console.error("❌ Database connection failed:", error);
     process.exit(1);

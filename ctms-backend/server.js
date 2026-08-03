@@ -1,173 +1,186 @@
-// Step 1 — Load .env file variables first — always at top!
-require('dotenv').config()
+// ================= LOAD ENV =================
+require("dotenv").config();
 
-// Ensure JWT env vars exist — provide development defaults to avoid crash
+// ================= JWT DEFAULT =================
+
 if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ JWT_SECRET not set in .env — using development default. Set JWT_SECRET in production.');
-  process.env.JWT_SECRET = 'dev_secret_change_me';
+  console.warn("⚠️ JWT_SECRET missing. Using development secret.");
+  process.env.JWT_SECRET = "dev_secret_change_me";
 }
+
 if (!process.env.JWT_EXPIRE) {
-  process.env.JWT_EXPIRE = '7d';
+  process.env.JWT_EXPIRE = "7d";
 }
 
-const helmet = require('helmet')
-const rateLimit = require('express-rate-limit')
+// ================= IMPORTS =================
 
+const express = require("express");
+const path = require("path");
+const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
-// ✅ CORRECT — import from models/index
-const { User, Department, Category, Ticket, Comment, ActivityLog, Attachment } = require('./src/models/index') 
-const commentRoutes = require('./src/routes/commentRoutes') 
+// Database
+const { connectDB } = require("./src/config/database");
+
+// Models
+const {
+  User,
+  Department,
+  Category,
+  Ticket,
+  Comment,
+  ActivityLog,
+  Attachment,
+} = require("./src/models/index");
+
+// Routes
+const authRoutes = require("./src/routes/authRoutes");
+const ticketRoutes = require("./src/routes/ticketRoutes");
+const departmentRoutes = require("./src/routes/departmentRoutes");
+const categoryRoutes = require("./src/routes/categoryRoutes");
 const userRoutes = require("./src/routes/userRoutes");
+const commentRoutes = require("./src/routes/commentRoutes");
+const attachmentRoutes = require("./src/routes/attachmentRoutes");
 
+// Error Middleware
+const errorHandler = require("./src/middleware/errorMiddleware");
 
-// Step 2 — Import express package
-const express = require('express')
-const path = require('path')
+// ================= APP =================
 
-// Step 3 — Import cors package
-const cors = require('cors')
+const app = express();
 
-// DB connection
-const { connectDB } = require('./src/config/database')
+// ================= SECURITY =================
 
-// Step 3 — Import our files
-const ticketRoutes = require('./src/routes/ticketRoutes')
-const errorHandler = require('./src/middleware/errorMiddleware')
-const authRoutes = require('./src/routes/authRoutes')
-const departmentRoutes = require('./src/routes/departmentRoutes')
-const categoryRoutes = require('./src/routes/categoryRoutes')
-const attachmentRoutes = require('./src/routes/attachmentRoutes')
+app.use(helmet());
 
+app.use("/uploads", express.static(path.resolve(__dirname, "uploads")));
 
-// Step 4 — Create express application
-const app = express()
+// ================= RATE LIMIT =================
 
-// ========== SECURITY ==========
-// Helmet — adds security headers
-app.use(helmet())
-
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')))
-
-// ========== RATE LIMITING ==========
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: {
-    success: false,
-    message: 'Too many requests! Please try again after 15 minutes.'
-  }
-})
-app.use(limiter)
+});
+
+app.use(limiter);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: {
-    success: false,
-    message: 'Too many login attempts! Please try again after 15 minutes.'
-  }
-})
-app.use('/api/auth', authLimiter)
+});
 
+app.use("/api/auth", authLimiter);
 
-// ========== MIDDLEWARE ==========
+// ================= CORS =================
 
-// Allow React frontend to talk to this backend
-app.use(cors())
-
-// Allow reading JSON data from request body
-app.use(express.json())
-
-// Allow reading form data from request body
-app.use(express.urlencoded({ extended: true }))
-
-// ========== ROUTES ==========
-
-// Home route — just to verify server is running
-app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'CTMS API is running!',
-    developer: 'Ashu'
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+    ],
+    credentials: true,
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ]
   })
-})
+);
 
-// Ticket routes
-// All /api/tickets requests go to ticketRoutes file
-app.use('/api/tickets', ticketRoutes)
+// ================= BODY PARSER =================
 
-// Auth routes
-app.use('/api/auth', authRoutes)
+app.use(express.json());
 
-// Department routes
-app.use('/api/departments', departmentRoutes)
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
 
-// Category routes
-app.use('/api/categories', categoryRoutes)
+// ================= HOME =================
 
-// User routes
-app.use('/api/users', userRoutes)
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "CTMS API is running!",
+    developer: "Ashu",
+  });
+});
 
-// Comment routes — nested under tickets
-app.use('/api/tickets/:ticketId/comments', commentRoutes)
+// ================= ROUTES =================
 
-// Attachment routes — nested under tickets
-app.use('/api/tickets/:ticketId/attachments', attachmentRoutes)
+app.use("/api/auth", authRoutes);
 
+app.use("/api/tickets", ticketRoutes);
 
+app.use("/api/departments", departmentRoutes);
 
+app.use("/api/categories", categoryRoutes);
 
-// ========== 404 HANDLER ==========
+app.use("/api/users", userRoutes);
 
-// If no route matched — send 404
+app.use("/api/tickets/:ticketId/comments", commentRoutes);
+
+app.use("/api/tickets/:ticketId/attachments", attachmentRoutes);
+
+// ================= 404 =================
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Cannot find ${req.method} ${req.originalUrl}`
-  })
-})
 
-// ========== ERROR HANDLER ==========
+    message: `Cannot find ${req.method} ${req.originalUrl}`,
+  });
+});
 
-// Must be LAST — catches all errors from entire app
-app.use(errorHandler)
+// ================= ERROR =================
 
+app.use(errorHandler);
 
+// ================= SERVER =================
 
-// ========== START SERVER ==========
-
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, async () => {
-  console.log(`✅ CTMS Server running on port ${PORT}`)
-  console.log(`🌐 URL: http://localhost:${PORT}`)
-  console.log(`📦 Environment: ${process.env.NODE_ENV}`)
+  console.log(`✅ CTMS Server running on port ${PORT}`);
 
-  // Connect to database
-  await connectDB()
+  console.log(`🌐 URL: http://localhost:${PORT}`);
 
-  // Sync ALL models to database
-  await User.sync({ force: false })
-  console.log('✅ Users table synced!')
+  try {
+    await connectDB();
 
-  await Department.sync({ force: false })
-  console.log('✅ Departments table synced!')
+    await User.sync({ force: false });
+    console.log("✅ Users table synced");
 
-  await Category.sync({ force: false })
-  console.log('✅ Categories table synced!')
+    await Department.sync({ force: false });
+    console.log("✅ Departments table synced");
 
-  await Ticket.sync({ force: false });
-  console.log('✅ Tickets table synced!')
+    await Category.sync({ force: false });
+    console.log("✅ Categories table synced");
 
-  await Comment.sync({ force: false })
-  console.log('✅ Comments table synced!')
+    await Ticket.sync({ force: false });
+    console.log("✅ Tickets table synced");
 
-  await ActivityLog.sync({ force: false })
-  console.log('✅ Activity logs table synced!')
+    await Comment.sync({ force: false });
+    console.log("✅ Comments table synced");
 
-  await Attachment.sync({ force: false })
-  console.log('✅ Attachments table synced!')
+    await ActivityLog.sync({ force: false });
+    console.log("✅ Activity logs table synced");
 
-  console.log('🎉 All tables ready!');
-})
+    await Attachment.sync({ force: false });
+    console.log("✅ Attachments table synced");
+
+    console.log("🎉 All tables ready!");
+  } catch (error) {
+    console.error("❌ Database/Sync Error:", error.message);
+  }
+});
