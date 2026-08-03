@@ -50,6 +50,8 @@ const errorHandler = require("./src/middleware/errorMiddleware");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // ================= SECURITY =================
 
 app.use(helmet());
