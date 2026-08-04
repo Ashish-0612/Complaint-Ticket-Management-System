@@ -1,44 +1,57 @@
-const nodemailer = require('nodemailer')
+const dns = require("dns");
+
+dns.setDefaultResultOrder("ipv4first");
+
+const nodemailer = require("nodemailer");
 
 // ========== CREATE TRANSPORTER ==========
-let transporter
-let usingTestAccount = false
+let transporter;
+let usingTestAccount = false;
 
 const initTransporter = async () => {
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (
+    !process.env.EMAIL_HOST ||
+    !process.env.EMAIL_USER ||
+    !process.env.EMAIL_PASS
+  ) {
     // No SMTP configured — create Ethereal test account for development
     try {
-      const testAccount = await nodemailer.createTestAccount()
+      const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
         host: testAccount.smtp.host,
         port: testAccount.smtp.port,
         secure: testAccount.smtp.secure,
         auth: {
           user: testAccount.user,
-          pass: testAccount.pass
-        }
-      })
-      usingTestAccount = true
-      console.warn('⚠️ No SMTP creds found — using Ethereal test account for development. Preview URLs will be logged.')
+          pass: testAccount.pass,
+        },
+      });
+      usingTestAccount = true;
+      console.warn(
+        "⚠️ No SMTP creds found — using Ethereal test account for development. Preview URLs will be logged.",
+      );
     } catch (err) {
-      console.error('Failed to create test email account:', err.message)
-      throw err
+      console.error("Failed to create test email account:", err.message);
+      throw err;
     }
   } else {
-    transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    })
+   transporter = nodemailer.createTransport({
+     host: "smtp.gmail.com",
+     port: 587,
+     secure: false,
+     family: 4,
+     auth: {
+       user: process.env.EMAIL_USER,
+       pass: process.env.EMAIL_PASS,
+     },
+   });
   }
-}
+};
 
 // Initialize transporter in background
-initTransporter().catch(err => console.error('Email transporter init error:', err))
+initTransporter().catch((err) =>
+  console.error("Email transporter init error:", err),
+);
 
 // ========== SEND EMAIL FUNCTION ==========
 const sendEmail = async ({ to, subject, html }) => {
@@ -47,41 +60,40 @@ const sendEmail = async ({ to, subject, html }) => {
       from: process.env.EMAIL_FROM,
       to,
       subject,
-      html
-    }
+      html,
+    };
 
     // If EMAIL_OVERRIDE_TO is set, route all outgoing mail to that address
     if (process.env.EMAIL_OVERRIDE_TO) {
-      const originalTo = mailOptions.to
-      mailOptions.to = process.env.EMAIL_OVERRIDE_TO
+      const originalTo = mailOptions.to;
+      mailOptions.to = process.env.EMAIL_OVERRIDE_TO;
       // append original recipient info to the subject and body for clarity
-      mailOptions.subject = `[ORIGINAL: ${originalTo}] ${mailOptions.subject}`
-      mailOptions.html = `${mailOptions.html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`
-      if (process.env.EMAIL_OVERRIDE_BCC === 'true') {
-        mailOptions.bcc = originalTo
+      mailOptions.subject = `[ORIGINAL: ${originalTo}] ${mailOptions.subject}`;
+      mailOptions.html = `${mailOptions.html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
+      if (process.env.EMAIL_OVERRIDE_BCC === "true") {
+        mailOptions.bcc = originalTo;
       }
     }
 
-    if (!transporter) await initTransporter()
-    const info = await transporter.sendMail(mailOptions)
-    console.log(`✅ Email sent: ${info.messageId} to ${mailOptions.to}`)
+    if (!transporter) await initTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent: ${info.messageId} to ${mailOptions.to}`);
     if (info.envelope) {
-      console.log(`📩 Envelope: ${JSON.stringify(info.envelope)}`)
+      console.log(`📩 Envelope: ${JSON.stringify(info.envelope)}`);
     }
 
     if (usingTestAccount) {
-      const preview = nodemailer.getTestMessageUrl(info)
-      console.log('🔎 Preview URL:', preview)
-      return { success: true, preview, info }
+      const preview = nodemailer.getTestMessageUrl(info);
+      console.log("🔎 Preview URL:", preview);
+      return { success: true, preview, info };
     }
 
-    return { success: true, info }
-
+    return { success: true, info };
   } catch (error) {
-    console.error(`❌ Email error: ${error.message}`)
-    return false
+    console.error(`❌ Email error: ${error.message}`);
+    return false;
   }
-}
+};
 
 // ========== EMAIL TEMPLATES ==========
 
@@ -102,7 +114,7 @@ const welcomeEmail = (name) => `
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
 
-`
+`;
 const verificationEmail = (name, verificationLink) => `
 <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px;">
   <h2 style="color:#2563eb;">Verify Your Email</h2>
@@ -161,7 +173,7 @@ const ticketCreatedEmail = (name, ticketId, title) => `
     <hr/>
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
-`
+`;
 
 // Ticket resolved email
 const ticketResolvedEmail = (name, ticketId, title) => `
@@ -178,7 +190,7 @@ const ticketResolvedEmail = (name, ticketId, title) => `
     <hr/>
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
-`
+`;
 
 // Ticket updated (generic) email
 const ticketUpdatedEmail = (name, ticketId, title, status) => `
@@ -195,7 +207,7 @@ const ticketUpdatedEmail = (name, ticketId, title, status) => `
     <hr/>
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
-`
+`;
 
 module.exports = {
   sendEmail,

@@ -126,6 +126,13 @@ const login = async (req, res) => {
       })
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first",
+      });
+    }
+
     // Step 5 — Compare password with hashed password
     const isPasswordCorrect = await bcrypt.compare(
       password,        // what user typed
@@ -173,6 +180,8 @@ const login = async (req, res) => {
     })
   }
 }
+
+
 
 // ========== GET PROFILE ==========
 const getProfile = async (req, res) => {
@@ -242,6 +251,41 @@ const updateProfile = async (req, res) => {
     })
   }
 }
+// ========== VERIFY EMAIL ==========
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      where: {
+        verificationToken: token
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification token!"
+      });
+    }
+
+    await user.update({
+      isVerified: true,
+      verificationToken: null
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully!"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 // ========== CHANGE PASSWORD ==========
 const changePassword = async (req, res) => {
@@ -293,4 +337,11 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { register, login, getProfile, updateProfile, changePassword };
+module.exports = {
+  register,
+  login,
+  verifyEmail,
+  getProfile,
+  updateProfile,
+  changePassword,
+};
