@@ -254,9 +254,7 @@ const CategoryManagement = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="e.g. Hardware"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all"
+                    className="w-full px-4 py-3 bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-xl"
                   />
                 </div>
 
@@ -269,8 +267,8 @@ const CategoryManagement = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, departmentId: e.target.value })
                     }
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all cursor-pointer"
+                    style={{ color: "#111827", backgroundColor: "#fff" }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl"
                   >
                     <option value="">Select Department</option>
                     {departments.map((dept) => (

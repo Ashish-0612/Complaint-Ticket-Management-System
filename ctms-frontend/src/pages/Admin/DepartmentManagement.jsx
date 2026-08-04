@@ -40,9 +40,14 @@ const DepartmentManagement = () => {
   const fetchDepartments = async () => {
     try {
       const res = await API.get("/departments");
+
+      console.log("Departments API Response:", res);
+      console.log("Departments Data:", res.data);
+
       setDepartments(res.data.data);
-    } catch {
-      console.log("Failed to load departments");
+    } catch (err) {
+      console.log("Department Error:", err);
+      console.log("Response:", err.response);
     } finally {
       setLoading(false);
     }
@@ -250,9 +255,11 @@ const DepartmentManagement = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="e.g. IT Support"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all"
+                    style={{
+                      color: "black",
+                      backgroundColor: "white",
+                    }}
+                    className="w-full border border-gray-300 p-3 rounded-xl"
                   />
                 </div>
 
@@ -267,7 +274,7 @@ const DepartmentManagement = () => {
                     }
                     placeholder="Brief description of this department"
                     rows={3}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all resize-none"
+                    className="w-full px-4 py-3 bg-white text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all resize-none"
                   />
                 </div>
 
