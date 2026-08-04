@@ -61,8 +61,10 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      "https://complaint-ticket-management-system-kiy9-7a6ohvoaa-ashu-f213.vercel.app",
+
       "https://complaint-ticket-management-system-rho.vercel.app",
+
+      "https://complaint-ticket-management-system-kiy9-7nggil9g1-ashu-f213.vercel.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
