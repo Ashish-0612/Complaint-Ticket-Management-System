@@ -26,6 +26,8 @@ import {
   RotateCcw,
   Printer,
   LoaderCircle,
+  Menu,
+  X,
 } from "lucide-react";
 
 const TicketDetail = () => {
@@ -47,6 +49,7 @@ const TicketDetail = () => {
   const [reopenLoading, setReopenLoading] = useState(false);
   const [pdfExportLoading, setPdfExportLoading] = useState(false);
   const [currentTime] = useState(() => Date.now());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -107,7 +110,6 @@ const TicketDetail = () => {
         comment: newComment,
       });
 
-      // Author manually add karo — refresh ki zaroorat nahi!
       const commentWithUser = {
         ...res.data.data,
         author: {
@@ -120,7 +122,6 @@ const TicketDetail = () => {
       setComments([...comments, commentWithUser]);
       setNewComment("");
 
-      // Activity log bhi refresh karo
       const logsRes = await API.get(`/tickets/${id}/comments/logs`);
       setActivityLogs(logsRes.data.data);
     } catch {
@@ -277,7 +278,6 @@ const TicketDetail = () => {
     };
   };
 
-  // Role based sidebar
   const getSidebarColor = () => {
     if (user?.role === "agent") return "bg-green-600";
     return "bg-blue-600";
@@ -314,7 +314,7 @@ const TicketDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-500">Loading complaint...</p>
@@ -325,7 +325,7 @@ const TicketDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <AlertCircle size={40} className="text-red-400 mx-auto mb-3" />
           <p className="text-red-500 font-medium">{error}</p>
@@ -340,100 +340,141 @@ const TicketDetail = () => {
     );
   }
 
+  const SidebarInner = (
+    <>
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`w-8 h-8 ${getSidebarColor()} rounded-lg flex items-center justify-center flex-shrink-0`}
+          >
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {getNavItems().map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all cursor-pointer min-h-[44px]"
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div
+            className={`w-8 h-8 rounded-full ${getSidebarColor()} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}
+          >
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* ========== SIDEBAR ========== */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0 print-hidden">
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-8 h-8 ${getSidebarColor()} rounded-lg flex items-center justify-center flex-shrink-0`}
-            >
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">
-                Complaint
-              </p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      {/* Mobile top bar */}
+      <div className="md:hidden print-hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Complaint #{ticket?.id}</p>
+        <div className="w-11" />
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {getNavItems().map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all cursor-pointer"
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0 print-hidden">
+        {SidebarInner}
+      </aside>
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div
-              className={`w-8 h-8 rounded-full ${getSidebarColor()} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}
-            >
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">
-                {user?.name}
-              </p>
-              <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      {/* Mobile drawer */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden print-hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden print-hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
       </aside>
 
       {/* ========== MAIN ========== */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0 print-hidden">
-          <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 print-hidden">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button
               onClick={() => navigate(getBackPath())}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm cursor-pointer"
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm cursor-pointer shrink-0"
             >
               <ArrowLeft size={16} />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </button>
-            <div className="h-5 w-px bg-gray-200"></div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">
+            <div className="hidden sm:block h-5 w-px bg-gray-200"></div>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold text-gray-800 truncate">
                 Complaint Details
               </h1>
               <p className="text-gray-500 text-xs">#{ticket?.id}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={handleExportPdf}
               disabled={pdfExportLoading || !ticket}
               title="Export ticket as PDF"
               aria-label="Export ticket as PDF"
-              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+              className="flex items-center gap-2 px-2.5 sm:px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-wait"
             >
               {pdfExportLoading ? (
                 <LoaderCircle size={17} className="animate-spin" />
@@ -445,7 +486,7 @@ const TicketDetail = () => {
               </span>
             </button>
             <NotificationBell tickets={ticket ? [ticket] : []} />
-            <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
+            <div className="hidden sm:flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
               <div
                 className={`w-6 h-6 rounded-full ${getSidebarColor()} flex items-center justify-center text-white text-xs font-bold`}
               >
@@ -476,15 +517,15 @@ const TicketDetail = () => {
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-5">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5">
             {/* Ticket Header Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800 flex-1 pr-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex-1 sm:pr-4">
                   {ticket?.title}
                 </h2>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex flex-wrap gap-2 shrink-0">
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ticket?.status)}`}
                   >
@@ -513,7 +554,7 @@ const TicketDetail = () => {
               </div>
 
               {/* Tags */}
-              <div className="flex gap-2 mb-5">
+              <div className="flex flex-wrap gap-2 mb-5">
                 {ticket?.department && (
                   <span className="flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium border border-purple-200">
                     <Tag size={11} />
@@ -533,69 +574,69 @@ const TicketDetail = () => {
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Description
                 </h3>
-                <p className="text-gray-700 text-sm leading-relaxed">
+                <p className="text-gray-700 text-sm leading-relaxed break-words">
                   {ticket?.description}
                 </p>
               </div>
 
               {/* Meta Info */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
                     <User size={14} className="text-blue-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-400">Created By</p>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 truncate">
                       {ticket?.creator?.name}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
                     <UserCog size={14} className="text-green-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-400">Assigned To</p>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 truncate">
                       {ticket?.agent?.name || "Not assigned"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">
                     <Calendar size={14} className="text-purple-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-400">Created</p>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 truncate">
                       {new Date(ticket?.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shrink-0">
                     <Clock size={14} className="text-orange-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-400">Last Updated</p>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 truncate">
                       {new Date(ticket?.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
                     <CalendarClock size={14} className="text-red-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-400">Due Date / SLA</p>
                     <p
-                      className={`text-xs font-semibold ${dueDateState.overdue ? "text-red-600" : "text-gray-700"}`}
+                      className={`text-xs font-semibold truncate ${dueDateState.overdue ? "text-red-600" : "text-gray-700"}`}
                     >
                       {dueDateState.overdue ? "Overdue · " : ""}
                       {dueDateState.label}
@@ -607,7 +648,7 @@ const TicketDetail = () => {
 
             {/* Attachments Section */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+              <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center gap-2">
                 <Paperclip size={18} className="text-gray-600" />
                 <h3 className="font-bold text-gray-800">Attachments</h3>
                 <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
@@ -615,12 +656,12 @@ const TicketDetail = () => {
                 </span>
               </div>
 
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <form
                   onSubmit={handleAttachmentUpload}
                   className="flex flex-col sm:flex-row gap-3 mb-5 print-hidden"
                 >
-                  <label className="flex-1 flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors">
+                  <label className="flex-1 flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-colors min-w-0">
                     <Paperclip size={18} className="text-blue-600 flex-shrink-0" />
                     <span className="truncate">
                       {selectedFile ? selectedFile.name : "Choose a file to attach"}
@@ -638,7 +679,7 @@ const TicketDetail = () => {
                   <button
                     type="submit"
                     disabled={!selectedFile || attachmentLoading}
-                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 cursor-pointer min-h-[44px]"
                   >
                     {attachmentLoading ? "Uploading..." : "Upload"}
                   </button>
@@ -660,21 +701,21 @@ const TicketDetail = () => {
                     {attachments.map((attachment) => (
                       <div
                         key={attachment.id}
-                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-3 py-3"
+                        className="flex flex-wrap sm:flex-nowrap items-center gap-3 border border-gray-100 rounded-xl px-3 py-3"
                       >
                         <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                           <Paperclip size={16} className="text-blue-600" />
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                           <p className="text-sm font-medium text-gray-800 truncate">
                             {attachment.originalName}
                           </p>
                           <p className="text-xs text-gray-400">
                             {formatFileSize(attachment.fileSize)} · {attachment.uploadedBy?.name || "Unknown"}
                           </p>
-                        </div>
-                        <a
-                          href={attachment.url}
+                      </div>
+                      <a
+                        href={attachment.url}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-600 text-xs font-semibold hover:underline flex-shrink-0"
@@ -702,7 +743,7 @@ const TicketDetail = () => {
 
             {/* Comments Section */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+              <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center gap-2">
                 <MessageSquare size={18} className="text-gray-600" />
                 <h3 className="font-bold text-gray-800">Comments</h3>
                 <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
@@ -710,8 +751,7 @@ const TicketDetail = () => {
                 </span>
               </div>
 
-              {/* Comments List */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 {comments.length === 0 ? (
                   <div className="text-center py-8">
                     <MessageSquare
@@ -730,13 +770,13 @@ const TicketDetail = () => {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                           {comment.author?.name?.charAt(0).toUpperCase() || "U"}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-semibold text-gray-800">
+                            <div className="flex items-center justify-between mb-2 gap-2">
+                              <span className="text-xs font-semibold text-gray-800 truncate">
                                 {comment.author?.name || "Unknown"}
                               </span>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 shrink-0">
                                 <span className="text-xs text-gray-400">
                                   {new Date(
                                     comment.createdAt,
@@ -755,7 +795,7 @@ const TicketDetail = () => {
                                 )}
                               </div>
                             </div>
-                            <p className="text-gray-700 text-sm">
+                            <p className="text-gray-700 text-sm break-words">
                               {comment.comment}
                             </p>
                           </div>
@@ -773,18 +813,18 @@ const TicketDetail = () => {
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 flex gap-2">
+                  <div className="flex-1 flex flex-col sm:flex-row gap-2 min-w-0">
                     <input
                       type="text"
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="Write a comment..."
-                      className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all"
+                      className="flex-1 min-w-0 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all"
                     />
                     <button
                       type="submit"
                       disabled={commentLoading || !newComment.trim()}
-                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 text-sm font-medium cursor-pointer"
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium cursor-pointer min-h-[44px]"
                     >
                       {commentLoading ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -796,9 +836,10 @@ const TicketDetail = () => {
                 </form>
               </div>
             </div>
+
             {/* Activity Log Section */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+              <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center gap-2">
                 <Activity size={18} className="text-gray-600" />
                 <h3 className="font-bold text-gray-800">Activity Log</h3>
                 <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium ml-1">
@@ -806,7 +847,7 @@ const TicketDetail = () => {
                 </span>
               </div>
 
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 {activityLogs.length === 0 ? (
                   <div className="text-center py-6">
                     <Activity
@@ -819,7 +860,6 @@ const TicketDetail = () => {
                   <div className="space-y-3">
                     {activityLogs.map((log, index) => (
                       <div key={log.id} className="flex gap-3">
-                        {/* Timeline line */}
                         <div className="flex flex-col items-center">
                           <div className="w-7 h-7 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0">
                             <Activity size={12} className="text-blue-600" />
@@ -828,9 +868,8 @@ const TicketDetail = () => {
                             <div className="w-0.5 h-full bg-gray-100 mt-1"></div>
                           )}
                         </div>
-                        {/* Log content */}
-                        <div className="flex-1 pb-3">
-                          <p className="text-sm text-gray-700 font-medium">
+                        <div className="flex-1 pb-3 min-w-0">
+                          <p className="text-sm text-gray-700 font-medium break-words">
                             {log.details}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">

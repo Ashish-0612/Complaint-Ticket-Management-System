@@ -341,9 +341,6 @@ html.dark .action-select option {
 		min-height: 100dvh;
 	}
 
-	.flex.h-screen > aside {
-		display: none;
-	}
 
 	.flex.h-screen > div.flex-1 {
 		width: 100%;
