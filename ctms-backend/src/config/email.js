@@ -101,7 +101,50 @@ const welcomeEmail = (name) => `
     <hr/>
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
+
 `
+const verificationEmail = (name, verificationLink) => `
+<div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px;">
+  <h2 style="color:#2563eb;">Verify Your Email</h2>
+
+  <p>Hello <strong>${name}</strong>,</p>
+
+  <p>
+    Thank you for registering on CTMS.
+  </p>
+
+  <p>
+    Please verify your email address by clicking the button below.
+  </p>
+
+  <div style="margin:30px 0;">
+    <a
+      href="${verificationLink}"
+      style="
+        background:#2563eb;
+        color:#fff;
+        padding:14px 24px;
+        text-decoration:none;
+        border-radius:8px;
+        display:inline-block;
+        font-weight:bold;
+      "
+    >
+      Verify Email
+    </a>
+  </div>
+
+  <p>
+    If you did not create this account, you can safely ignore this email.
+  </p>
+
+  <hr>
+
+  <p style="font-size:12px;color:#777;">
+    CTMS Support Team
+  </p>
+</div>
+`;
 
 // Ticket created email
 const ticketCreatedEmail = (name, ticketId, title) => `
@@ -157,7 +200,8 @@ const ticketUpdatedEmail = (name, ticketId, title, status) => `
 module.exports = {
   sendEmail,
   welcomeEmail,
+  verificationEmail,
   ticketCreatedEmail,
   ticketResolvedEmail,
-  ticketUpdatedEmail
-}
+  ticketUpdatedEmail,
+};

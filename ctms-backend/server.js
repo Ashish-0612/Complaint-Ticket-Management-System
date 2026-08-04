@@ -153,7 +153,7 @@ app.listen(PORT, async () => {
   try {
     await connectDB();
 
-    await User.sync({ force: false });
+    await User.sync({ alter: true });
     console.log("✅ Users table synced");
 
     await Department.sync({ force: false });
