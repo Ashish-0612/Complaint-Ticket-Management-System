@@ -1,97 +1,36 @@
-const dns = require("dns");
+const { Resend } = require("resend");
 
-dns.setDefaultResultOrder("ipv4first");
-
-const nodemailer = require("nodemailer");
-
-// ========== CREATE TRANSPORTER ==========
-let transporter;
-let usingTestAccount = false;
-
-const initTransporter = async () => {
-  if (
-    !process.env.EMAIL_HOST ||
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASS
-  ) {
-    // No SMTP configured — create Ethereal test account for development
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: testAccount.smtp.host,
-        port: testAccount.smtp.port,
-        secure: testAccount.smtp.secure,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      usingTestAccount = true;
-      console.warn(
-        "⚠️ No SMTP creds found — using Ethereal test account for development. Preview URLs will be logged.",
-      );
-    } catch (err) {
-      console.error("Failed to create test email account:", err.message);
-      throw err;
-    }
-  } else {
-   transporter = nodemailer.createTransport({
-     host: "smtp.gmail.com",
-     port: 465,
-     secure: true,
-     family: 4,
-     auth: {
-       user: process.env.EMAIL_USER,
-       pass: process.env.EMAIL_PASS,
-     },
-     connectionTimeout: 15000,
-     greetingTimeout: 15000,
-     socketTimeout: 15000,
-   });
-  }
-};
-
-// Initialize transporter in background
-initTransporter().catch((err) =>
-  console.error("Email transporter init error:", err),
-);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ========== SEND EMAIL FUNCTION ==========
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
-    };
+    let finalTo = to;
+    let finalSubject = subject;
+    let finalHtml = html;
 
     // If EMAIL_OVERRIDE_TO is set, route all outgoing mail to that address
     if (process.env.EMAIL_OVERRIDE_TO) {
-      const originalTo = mailOptions.to;
-      mailOptions.to = process.env.EMAIL_OVERRIDE_TO;
-      // append original recipient info to the subject and body for clarity
-      mailOptions.subject = `[ORIGINAL: ${originalTo}] ${mailOptions.subject}`;
-      mailOptions.html = `${mailOptions.html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
-      if (process.env.EMAIL_OVERRIDE_BCC === "true") {
-        mailOptions.bcc = originalTo;
-      }
+      const originalTo = to;
+      finalTo = process.env.EMAIL_OVERRIDE_TO;
+      finalSubject = `[ORIGINAL: ${originalTo}] ${subject}`;
+      finalHtml = `${html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
     }
 
-    if (!transporter) await initTransporter();
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent: ${info.messageId} to ${mailOptions.to}`);
-    if (info.envelope) {
-      console.log(`📩 Envelope: ${JSON.stringify(info.envelope)}`);
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "CTMS Support <onboarding@resend.dev>",
+      to: finalTo,
+      subject: finalSubject,
+      html: finalHtml,
+    });
+
+    if (error) {
+      console.error(`❌ Email error: ${error.message || error}`);
+      return false;
     }
 
-    if (usingTestAccount) {
-      const preview = nodemailer.getTestMessageUrl(info);
-      console.log("🔎 Preview URL:", preview);
-      return { success: true, preview, info };
-    }
-
-    return { success: true, info };
+    console.log(`✅ Email sent: ${data.id} to ${finalTo}`);
+    return { success: true, info: data };
   } catch (error) {
     console.error(`❌ Email error: ${error.message}`);
     return false;
@@ -100,7 +39,6 @@ const sendEmail = async ({ to, subject, html }) => {
 
 // ========== EMAIL TEMPLATES ==========
 
-// Welcome email
 const welcomeEmail = (name) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: #2563eb;">Welcome to CTMS! 🎉</h2>
@@ -116,24 +54,16 @@ const welcomeEmail = (name) => `
     <hr/>
     <p style="color: #666; font-size: 12px;">CTMS Support Team</p>
   </div>
-
 `;
+
 const verificationEmail = (name, verificationLink) => `
 <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px;">
   <h2 style="color:#2563eb;">Verify Your Email</h2>
-
   <p>Hello <strong>${name}</strong>,</p>
-
-  <p>
-    Thank you for registering on CTMS.
-  </p>
-
-  <p>
-    Please verify your email address by clicking the button below.
-  </p>
-
+  <p>Thank you for registering on CTMS.</p>
+  <p>Please verify your email address by clicking the button below.</p>
   <div style="margin:30px 0;">
-    <a
+    
       href="${verificationLink}"
       style="
         background:#2563eb;
@@ -148,20 +78,12 @@ const verificationEmail = (name, verificationLink) => `
       Verify Email
     </a>
   </div>
-
-  <p>
-    If you did not create this account, you can safely ignore this email.
-  </p>
-
+  <p>If you did not create this account, you can safely ignore this email.</p>
   <hr>
-
-  <p style="font-size:12px;color:#777;">
-    CTMS Support Team
-  </p>
+  <p style="font-size:12px;color:#777;">CTMS Support Team</p>
 </div>
 `;
 
-// Ticket created email
 const ticketCreatedEmail = (name, ticketId, title) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: #2563eb;">Ticket Created Successfully! 🎫</h2>
@@ -178,7 +100,6 @@ const ticketCreatedEmail = (name, ticketId, title) => `
   </div>
 `;
 
-// Ticket resolved email
 const ticketResolvedEmail = (name, ticketId, title) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: #16a34a;">Ticket Resolved! ✅</h2>
@@ -195,7 +116,6 @@ const ticketResolvedEmail = (name, ticketId, title) => `
   </div>
 `;
 
-// Ticket updated (generic) email
 const ticketUpdatedEmail = (name, ticketId, title, status) => `
   <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: #2563eb;">Ticket Update Notification</h2>
