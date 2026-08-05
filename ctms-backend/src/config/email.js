@@ -1,95 +1,62 @@
-const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first");
+const brevo = require("@getbrevo/brevo");
 
+let apiInstance;
+let brevoConfigured = false;
 
-const nodemailer = require("nodemailer");
+if (process.env.BREVO_API_KEY) {
+  apiInstance = new brevo.TransactionalEmailsApi();
+  apiInstance.setApiKey(
+    brevo.TransactionalEmailsApiApiKeys.apiKey,
+    process.env.BREVO_API_KEY,
+  );
+  brevoConfigured = true;
+} else {
+  console.warn("⚠️ BREVO_API_KEY not set — emails will not be sent.");
+}
 
-// ========== CREATE TRANSPORTER ==========
-let transporter;
-let usingTestAccount = false;
-
-const initTransporter = async () => {
-  if (
-    !process.env.EMAIL_HOST ||
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASS
-  ) {
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-     transporter = nodemailer.createTransport({
-       host: process.env.EMAIL_HOST,
-       port: Number(process.env.EMAIL_PORT) || 587,
-       secure: false,
-       family: 4,
-       auth: {
-         user: process.env.EMAIL_USER,
-         pass: process.env.EMAIL_PASS,
-       },
-       connectionTimeout: 20000,
-       greetingTimeout: 20000,
-       socketTimeout: 20000,
-     });
-      usingTestAccount = true;
-      console.warn(
-        "⚠️ No SMTP creds found — using Ethereal test account for development.",
-      );
-    } catch (err) {
-      console.error("Failed to create test email account:", err.message);
-      throw err;
-    }
-  } else {
-    transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 20000,
-      greetingTimeout: 20000,
-      socketTimeout: 20000,
-    });
+// Parse "Name <email@example.com>" into { name, email }
+const parseFromAddress = (fromString) => {
+  const match = fromString?.match(/^(.*)<(.+)>$/);
+  if (match) {
+    return { name: match[1].trim().replace(/"/g, ""), email: match[2].trim() };
   }
+  return { name: "CTMS Support", email: fromString || "no-reply@example.com" };
 };
-
-initTransporter().catch((err) =>
-  console.error("Email transporter init error:", err),
-);
 
 // ========== SEND EMAIL FUNCTION ==========
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
-    };
+    if (!brevoConfigured) {
+      console.error("❌ Email error: Brevo API key not configured.");
+      return false;
+    }
+
+    let finalTo = to;
+    let finalSubject = subject;
+    let finalHtml = html;
 
     if (process.env.EMAIL_OVERRIDE_TO) {
-      const originalTo = mailOptions.to;
-      mailOptions.to = process.env.EMAIL_OVERRIDE_TO;
-      mailOptions.subject = `[ORIGINAL: ${originalTo}] ${mailOptions.subject}`;
-      mailOptions.html = `${mailOptions.html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
-      if (process.env.EMAIL_OVERRIDE_BCC === "true") {
-        mailOptions.bcc = originalTo;
-      }
+      const originalTo = to;
+      finalTo = process.env.EMAIL_OVERRIDE_TO;
+      finalSubject = `[ORIGINAL: ${originalTo}] ${subject}`;
+      finalHtml = `${html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
     }
 
-    if (!transporter) await initTransporter();
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent: ${info.messageId} to ${mailOptions.to}`);
+    const sender = parseFromAddress(process.env.EMAIL_FROM);
 
-    if (usingTestAccount) {
-      const preview = nodemailer.getTestMessageUrl(info);
-      console.log("🔎 Preview URL:", preview);
-      return { success: true, preview, info };
-    }
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = sender;
+    sendSmtpEmail.to = [{ email: finalTo }];
+    sendSmtpEmail.subject = finalSubject;
+    sendSmtpEmail.htmlContent = finalHtml;
 
-    return { success: true, info };
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ Email sent to ${finalTo}`, response.body?.messageId || "");
+    return { success: true, info: response.body };
   } catch (error) {
-    console.error(`❌ Email error: ${error.message}`);
+    console.error(
+      `❌ Email error: ${error.response?.body?.message || error.message}`,
+    );
     return false;
   }
 };
