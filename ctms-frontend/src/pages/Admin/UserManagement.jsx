@@ -78,8 +78,7 @@ const UserManagement = () => {
         setConfirmation({ ...confirmation, isOpen: false });
       },
       onCancel: () => {
-        // Revert the visual change in the select dropdown
-        setUsers([...users]);
+        // Just close the modal, no state change needed
         setConfirmation({ ...confirmation, isOpen: false });
       },
     });
@@ -221,43 +220,37 @@ const UserManagement = () => {
     </>
   );
 
-  const ConfirmationModal = () => {
-    if (!confirmation.isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
-          <div className="w-14 h-14 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
-            {confirmation.title}
-          </h3>
-          <p className="text-gray-500 text-sm mb-6">
-            {confirmation.message}
-          </p>
-          <div className="flex justify-center gap-3">
-            <button
-              onClick={confirmation.onCancel}
-              className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmation.onConfirm}
-              className="w-full py-2.5 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <ConfirmationModal />
+      {confirmation.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center border border-gray-200">
+            <div className="w-14 h-14 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              {confirmation.title}
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">
+              {confirmation.message}
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={confirmation.onCancel}
+                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmation.onConfirm}
+                className="w-full py-2.5 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
         <button
