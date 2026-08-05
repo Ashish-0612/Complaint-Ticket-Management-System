@@ -52,9 +52,20 @@ const sendEmail = async ({ to, subject, html }) => {
     console.log(`✅ Email sent to ${finalTo}`, response.data?.messageId || "");
     return { success: true, info: response.data };
   } catch (error) {
-    console.error(
-      `❌ Email error: ${error.response?.data?.message || error.message}`,
-    );
+    const status = error.response?.status;
+    const brevoMessage = error.response?.data?.message;
+    const brevoCode = error.response?.data?.code;
+    console.error("❌ Email sending failed!");
+    console.error(`   Status: ${status || "N/A"}`);
+    console.error(`   Brevo code: ${brevoCode || "N/A"}`);
+    console.error(`   Message: ${brevoMessage || error.message}`);
+    if (status === 401 || status === 403) {
+      console.error("   ⚠️ BREVO_API_KEY invalid ya unauthorized hai. API key check karo.");
+    }
+    if (status === 400 && error.response?.data?.message?.toLowerCase().includes("from")) {
+      console.error("   ⚠️ EMAIL_FROM me jo sender hai wo Brevo me verified nahi hai.");
+      console.error("   👉 Brevo dashboard → Senders → apna verified email use karo.");
+    }
     return false;
   }
 };
@@ -85,7 +96,7 @@ const verificationEmail = (name, verificationLink) => `
   <p>Thank you for registering on CTMS.</p>
   <p>Please verify your email address by clicking the button below.</p>
   <div style="margin:30px 0;">
-    
+    <a
       href="${verificationLink}"
       style="
         background:#2563eb;
