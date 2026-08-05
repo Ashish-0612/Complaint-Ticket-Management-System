@@ -18,7 +18,6 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,7 +43,6 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
       });
       setSuccess(true);
       setTimeout(() => navigate("/login"), 2000);
@@ -399,23 +397,6 @@ const Register = () => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Role */}
-            <div>
-              <label className="block text-gray-700 text-sm font-semibold mb-1.5">
-                Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all cursor-pointer"
-              >
-                <option value="user">User — Raise support tickets</option>
-                <option value="agent">Agent — Handle assigned tickets</option>
-                <option value="admin">Admin — Assign Tickets to Agent</option>
-              </select>
             </div>
 
             {/* Submit */}

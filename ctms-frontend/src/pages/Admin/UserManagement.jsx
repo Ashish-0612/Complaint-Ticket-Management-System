@@ -57,6 +57,15 @@ const UserManagement = () => {
   };
 
   const handleRoleChange = async (userId, newRole) => {
+    if (!window.confirm(`Are you sure you want to change the role for this user to "${newRole}"?`)) {
+      return;
+    }
+
+    // Prevent changing own role
+    if (userId === user?.id) {
+      alert("You cannot change your own role.");
+      return;
+    }
     try {
       await API.put(`/users/${userId}/role`, { role: newRole });
       setUsers(
