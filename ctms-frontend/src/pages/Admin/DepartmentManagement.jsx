@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import NotificationBell from "../../components/NotificationBell";
 import {
   Ticket,
   LogOut,
@@ -11,7 +12,6 @@ import {
   Tag,
   BarChart3,
   Settings,
-  Bell,
   Plus,
   Edit2,
   Trash2,
@@ -20,6 +20,8 @@ import {
   X,
   Menu,
 } from "lucide-react";
+
+
 
 const DepartmentManagement = () => {
   const navigate = useNavigate();
@@ -34,10 +36,7 @@ const DepartmentManagement = () => {
   const [error, setError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  const [tickets, setTickets] = useState([]);
 
   const fetchDepartments = async () => {
     try {
@@ -49,6 +48,15 @@ const DepartmentManagement = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDepartments();
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((res) => setTickets(res.data.data || []))
+      .catch(() => setTickets([]));
+  }, []);
+
+
 
   const handleLogout = () => {
     logout();
@@ -246,9 +254,7 @@ const DepartmentManagement = () => {
               <Plus size={16} />
               <span className="hidden sm:inline">Add Department</span>
             </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={tickets} />
           </div>
         </header>
 

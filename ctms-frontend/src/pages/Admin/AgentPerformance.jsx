@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import NotificationBell from "../../components/NotificationBell";
 import {
   LayoutDashboard,
   Users,
@@ -12,7 +13,6 @@ import {
   Settings,
   LogOut,
   TrendingUp,
-  Bell,
   Search,
   Filter,
   Clock,
@@ -20,11 +20,14 @@ import {
   X,
 } from "lucide-react";
 
+
+
 const AgentPerformance = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const [performance, setPerformance] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,7 +44,12 @@ const AgentPerformance = () => {
       }
     };
     fetchPerformance();
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((res) => setTickets(res.data.data || []))
+      .catch(() => setTickets([]));
   }, []);
+
+
 
   const handleLogout = () => {
     logout();
@@ -196,9 +204,7 @@ const AgentPerformance = () => {
                 year: "numeric",
               })}
             </div>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}

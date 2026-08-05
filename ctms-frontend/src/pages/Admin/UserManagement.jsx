@@ -11,13 +11,15 @@ import {
   Tag,
   BarChart3,
   Settings,
-  Bell,
   Search,
   CheckCircle,
   XCircle,
   Menu,
   X,
 } from "lucide-react";
+import NotificationBell from "../../components/NotificationBell";
+
+
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -41,7 +44,12 @@ const UserManagement = () => {
       }
     };
     fetchUsers();
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((res) => setTickets(res.data.data || []))
+      .catch(() => setTickets([]));
   }, []);
+
+
 
   const handleLogout = () => {
     logout();
@@ -223,9 +231,7 @@ const UserManagement = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}

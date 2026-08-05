@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import NotificationBell from "../../components/NotificationBell";
 import {
   Ticket,
   LogOut,
@@ -9,18 +10,30 @@ import {
   PlusCircle,
   FileText,
   Activity,
-  Bell,
   AlertCircle,
   CheckCircle,
   Paperclip,
   Trash2,
+  Menu,
+  X,
 } from "lucide-react";
 
 const CreateTicket = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tickets, setTickets] = useState([]);
+
+  useEffect(() => {
+    // Notification bell ke liye user ke tickets
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((res) => setTickets(res.data.data || []))
+      .catch(() => setTickets([]));
+  }, []);
 
   const [formData, setFormData] = useState({
+
+
     title: "",
     description: "",
     priority: "medium",
@@ -199,8 +212,104 @@ const CreateTicket = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* ========== MOBILE TOP BAR ========== */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">New Complaint</p>
+        <div className="w-11" />
+      </div>
+
+      {/* ========== MOBILE DRAWER ========== */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Ticket size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm leading-none">
+                Complaint
+              </p>
+              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+            Main Menu
+          </p>
+          <ul className="space-y-0.5">
+            {navItems.map((item, i) => (
+              <li key={i}>
+                <button
+                  onClick={() => {
+                    navigate(item.path);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                    item.active
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                  }`}
+                >
+                  <item.icon size={17} />
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="px-3 py-4 border-t border-gray-800">
+          <div className="flex items-center gap-2.5 px-2 mb-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-white text-xs font-medium truncate">
+                {user?.name}
+              </p>
+              <p className="text-gray-500 text-xs">User</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
+      </aside>
+
       {/* ========== SIDEBAR ========== */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 z-20 h-screen w-56 bg-gray-900 flex-col">
+
+
         <div className="px-5 py-5 border-b border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -271,9 +380,7 @@ const CreateTicket = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.charAt(0).toUpperCase()}

@@ -11,6 +11,7 @@ import {
   Ticket,
 } from "lucide-react";
 import API from "../api/axios";
+import NotificationBell from "../components/NotificationBell";
 import { useTheme } from "../context/ThemeContext";
 
 const WorkspacePage = ({ mode }) => {
@@ -19,11 +20,9 @@ const WorkspacePage = ({ mode }) => {
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    if (mode === "reports" || mode === "activity") {
-      API.get("/tickets", { params: { limit: 1000 } })
-        .then((response) => setTickets(response.data.data || []))
-        .catch(() => setTickets([]));
-    }
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((response) => setTickets(response.data.data || []))
+      .catch(() => setTickets([]));
   }, [mode]);
 
   const config = {
@@ -52,11 +51,24 @@ const WorkspacePage = ({ mode }) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-8">
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">{config.title}</p>
+        <NotificationBell tickets={tickets} />
+      </div>
+
+      <main className="min-w-0 flex-1 overflow-y-auto pt-14 md:pt-0 p-3 sm:p-8">
         <div className="mx-auto max-w-5xl">
           <button
             onClick={() => navigate(-1)}
-            className="mb-5 flex cursor-pointer items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
+            className="hidden md:flex mb-5 cursor-pointer items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -64,8 +76,8 @@ const WorkspacePage = ({ mode }) => {
             <div className="rounded-xl bg-blue-600 p-3 text-white">
               <Icon size={22} />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
                 {config.title}
               </h1>
               <p className="text-sm text-gray-500">{config.subtitle}</p>
@@ -99,7 +111,7 @@ const WorkspacePage = ({ mode }) => {
                   className={`rounded-2xl border border-gray-100 p-5 shadow-sm ${color}`}
                 >
                   <h2 className="font-bold text-gray-800">{title}</h2>
-                  <p className="mt-2 text-sm text-gray-600">{text}</p>
+                  <p className="mt-2 text-sm text-gray-600 break-words">{text}</p>
                   <p className="mt-4 text-xs text-gray-400">{date}</p>
                 </article>
               ))}
@@ -107,7 +119,7 @@ const WorkspacePage = ({ mode }) => {
           )}
 
           {mode === "activity" && (
-            <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
               <div className="space-y-4">
                 {tickets.slice(0, 10).map((ticket) => (
                   <button
@@ -141,7 +153,7 @@ const WorkspacePage = ({ mode }) => {
           )}
 
           {mode === "reports" && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 [
                   "Total tickets",
@@ -172,22 +184,22 @@ const WorkspacePage = ({ mode }) => {
               ].map(([label, value, StatIcon, color]) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+                  className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm"
                 >
                   <div className={`mb-3 inline-flex rounded-xl p-3 ${color}`}>
                     <StatIcon size={20} />
                   </div>
-                  <p className="text-2xl font-bold text-gray-800">{value}</p>
-                  <p className="mt-1 text-sm text-gray-500">{label}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-800">{value}</p>
+                  <p className="mt-1 text-sm text-gray-500 truncate">{label}</p>
                 </div>
               ))}
             </div>
           )}
 
           {mode === "settings" && (
-            <section className="max-w-2xl rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-100 py-4">
-                <div>
+            <section className="max-w-2xl rounded-2xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 py-4">
+                <div className="min-w-0">
                   <h2 className="font-bold text-gray-800">Appearance</h2>
                   <p className="mt-1 text-sm text-gray-500">
                     Choose the theme for this device.

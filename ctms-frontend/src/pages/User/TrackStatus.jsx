@@ -53,7 +53,22 @@ const TrackStatus = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Track Complaint</p>
+        <NotificationBell tickets={tickets} />
+      </div>
+
       <aside className="hidden w-56 flex-shrink-0 flex-col bg-gray-900 md:flex">
+
+
         <div className="border-b border-gray-800 px-5 py-5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600"><Ticket size={16} className="text-white" /></div>
@@ -65,7 +80,7 @@ const TrackStatus = () => {
         </nav>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden pt-14 md:pt-0">
         <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-8">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate("/dashboard")} className="flex cursor-pointer items-center gap-2 text-sm text-gray-500 hover:text-gray-800"><ArrowLeft size={16} /> Back</button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -11,11 +11,16 @@ import {
   X,
 } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ open = false, onOpenChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = open;
+  const setIsOpen = (value) => {
+    if (typeof onOpenChange === "function") onOpenChange(value);
+  };
+
+
 
   const handleLogout = () => {
     logout();

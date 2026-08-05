@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import NotificationBell from "../../components/NotificationBell";
 import {
   Ticket,
   LogOut,
   LayoutDashboard,
   PlusCircle,
   FileText,
-  Bell,
   User,
   Mail,
   Lock,
@@ -23,6 +23,8 @@ import {
   X,
 } from "lucide-react";
 
+
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, login } = useAuth();
@@ -31,6 +33,15 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tickets, setTickets] = useState([]);
+
+  useEffect(() => {
+    API.get("/tickets", { params: { limit: 1000 } })
+      .then((res) => setTickets(res.data.data || []))
+      .catch(() => setTickets([]));
+  }, []);
+
+
 
   const [nameForm, setNameForm] = useState({ name: "" });
   const [passwordForm, setPasswordForm] = useState({
@@ -278,9 +289,7 @@ const Profile = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Bell size={18} />
-            </button>
+            <NotificationBell tickets={tickets} />
             <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg">
               <div
                 className={`w-6 h-6 rounded-full ${getSidebarColor()} flex items-center justify-center text-white text-xs font-bold shrink-0`}
