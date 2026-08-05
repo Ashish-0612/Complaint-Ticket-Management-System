@@ -64,7 +64,7 @@ const register = async (req, res) => {
       verificationToken,
     });
 
-    const verificationLink = `${process.env.BACKEND_URL}/api/auth/verify-email/${verificationToken}`;
+    const verificationLink = `${getBackendUrl()}/api/auth/verify-email/${verificationToken}`;
 
     // Step 6 — Send welcome email
    await sendEmail({
@@ -254,6 +254,18 @@ const updateProfile = async (req, res) => {
 // ========== VERIFY EMAIL ==========
 const FRONTEND_URL =
   process.env.FRONTEND_URL || "https://complaint-ticket-management-system-rho.vercel.app";
+
+const DEFAULT_BACKEND_URL = "https://complaint-ticket-management-system-3.onrender.com";
+
+// Get the backend base URL. Falls back to the deployed Render URL if
+// BACKEND_URL is missing (e.g. not set in the hosting environment).
+const getBackendUrl = () => {
+  const backendUrl = process.env.BACKEND_URL;
+  if (backendUrl && backendUrl !== "undefined" && backendUrl !== "") {
+    return backendUrl.replace(/\/+$/, "");
+  }
+  return DEFAULT_BACKEND_URL;
+};
 
 const verificationSuccessPage = (name) => `
 <!DOCTYPE html>
