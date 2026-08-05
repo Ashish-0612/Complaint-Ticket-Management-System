@@ -31,6 +31,13 @@ const UserManagement = () => {
   const [filterRole, setFilterRole] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tickets, setTickets] = useState([]);
+  const [confirmation, setConfirmation] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {},
+  });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -56,25 +63,42 @@ const UserManagement = () => {
     navigate("/login");
   };
 
-  const handleRoleChange = async (userId, newRole) => {
-    if (!window.confirm(`Are you sure you want to change the role for this user to "${newRole}"?`)) {
-      return;
-    }
-
-    // Prevent changing own role
+  const handleRoleChange = (userId, newRole, userName) => {
     if (userId === user?.id) {
       alert("You cannot change your own role.");
       return;
     }
+
+    setConfirmation({
+      isOpen: true,
+      title: "Confirm Role Change",
+      message: `Are you sure you want to change the role for ${userName} to "${newRole}"?`,
+      onConfirm: () => {
+        executeRoleChange(userId, newRole);
+        setConfirmation({ ...confirmation, isOpen: false });
+      },
+      onCancel: () => {
+        // Revert the visual change in the select dropdown
+        setUsers([...users]);
+        setConfirmation({ ...confirmation, isOpen: false });
+      },
+    });
+  };
+
+  const executeRoleChange = async (userId, newRole) => {
     try {
       await API.put(`/users/${userId}/role`, { role: newRole });
-      setUsers(
-        users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+      setUsers((currentUsers) =>
+        currentUsers.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
+      // Optionally, show a success toast/alert here
     } catch (err) {
       alert(err.response?.data?.message || "Failed to change role!");
+      // Revert the visual change on failure
+      setUsers([...users]);
     }
   };
+
 
   const handleStatusToggle = async (userId) => {
     try {
@@ -197,8 +221,44 @@ const UserManagement = () => {
     </>
   );
 
+  const ConfirmationModal = () => {
+    if (!confirmation.isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+          <div className="w-14 h-14 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-2">
+            {confirmation.title}
+          </h3>
+          <p className="text-gray-500 text-sm mb-6">
+            {confirmation.message}
+          </p>
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={confirmation.onCancel}
+              className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmation.onConfirm}
+              className="w-full py-2.5 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <ConfirmationModal />
+
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
         <button
           onClick={() => setMobileMenuOpen(true)}
@@ -398,7 +458,7 @@ const UserManagement = () => {
                           <select
                             value={u.role}
                             onChange={(e) =>
-                              handleRoleChange(u.id, e.target.value)
+                              handleRoleChange(u.id, e.target.value, u.name)
                             }
                             className="text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
                           >
