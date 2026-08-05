@@ -1,36 +1,86 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ========== CREATE TRANSPORTER ==========
+let transporter;
+let usingTestAccount = false;
+
+const initTransporter = async () => {
+  if (
+    !process.env.EMAIL_HOST ||
+    !process.env.EMAIL_USER ||
+    !process.env.EMAIL_PASS
+  ) {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: testAccount.smtp.host,
+        port: testAccount.smtp.port,
+        secure: testAccount.smtp.secure,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+      usingTestAccount = true;
+      console.warn(
+        "⚠️ No SMTP creds found — using Ethereal test account for development.",
+      );
+    } catch (err) {
+      console.error("Failed to create test email account:", err.message);
+      throw err;
+    }
+  } else {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      connectionTimeout: 20000,
+      greetingTimeout: 20000,
+      socketTimeout: 20000,
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 5,
+    });
+  }
+};
+
+initTransporter().catch((err) =>
+  console.error("Email transporter init error:", err),
+);
 
 // ========== SEND EMAIL FUNCTION ==========
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    let finalTo = to;
-    let finalSubject = subject;
-    let finalHtml = html;
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to,
+      subject,
+      html,
+    };
 
-    // If EMAIL_OVERRIDE_TO is set, route all outgoing mail to that address
     if (process.env.EMAIL_OVERRIDE_TO) {
-      const originalTo = to;
-      finalTo = process.env.EMAIL_OVERRIDE_TO;
-      finalSubject = `[ORIGINAL: ${originalTo}] ${subject}`;
-      finalHtml = `${html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
+      const originalTo = mailOptions.to;
+      mailOptions.to = process.env.EMAIL_OVERRIDE_TO;
+      mailOptions.subject = `[ORIGINAL: ${originalTo}] ${mailOptions.subject}`;
+      mailOptions.html = `${mailOptions.html}<hr/><p style="font-size:12px;color:#666;">Originally intended for: <strong>${originalTo}</strong></p>`;
+      if (process.env.EMAIL_OVERRIDE_BCC === "true") {
+        mailOptions.bcc = originalTo;
+      }
     }
 
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "CTMS Support <onboarding@resend.dev>",
-      to: finalTo,
-      subject: finalSubject,
-      html: finalHtml,
-    });
+    if (!transporter) await initTransporter();
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent: ${info.messageId} to ${mailOptions.to}`);
 
-    if (error) {
-      console.error(`❌ Email error: ${error.message || error}`);
-      return false;
+    if (usingTestAccount) {
+      const preview = nodemailer.getTestMessageUrl(info);
+      console.log("🔎 Preview URL:", preview);
+      return { success: true, preview, info };
     }
 
-    console.log(`✅ Email sent: ${data.id} to ${finalTo}`);
-    return { success: true, info: data };
+    return { success: true, info };
   } catch (error) {
     console.error(`❌ Email error: ${error.message}`);
     return false;
