@@ -14,6 +14,7 @@ import {
   Search,
   CheckCircle,
   XCircle,
+  AlertCircle, // <-- Yeh line add ki gayi hai
   Menu,
   X,
 } from "lucide-react";
@@ -39,17 +40,19 @@ const UserManagement = () => {
     onCancel: () => {},
   });
 
+  // Function to fetch users, made accessible outside useEffect
+  const fetchUsers = async () => {
+    try {
+      const res = await API.get("/users");
+      setUsers(res.data.data);
+    } catch (err) {
+      console.error("Failed to load users:", err); // Changed to console.error for better debugging
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await API.get("/users");
-        setUsers(res.data.data);
-      } catch {
-        console.log("Failed to load users");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchUsers();
     API.get("/tickets", { params: { limit: 1000 } })
       .then((res) => setTickets(res.data.data || []))
@@ -63,7 +66,7 @@ const UserManagement = () => {
     navigate("/login");
   };
 
-  const handleRoleChange = (userId, newRole, userName) => {
+  const handleRoleChange = (userId, newRole, userName, originalRole) => { // Added originalRole
     if (userId === user?.id) {
       alert("You cannot change your own role.");
       return;
@@ -78,13 +81,17 @@ const UserManagement = () => {
         setConfirmation({ ...confirmation, isOpen: false });
       },
       onCancel: () => {
-        // Just close the modal, no state change needed
+        // Revert the visual change in the select dropdown
+        setUsers(currentUsers =>
+          currentUsers.map(u => (u.id === userId ? { ...u, role: originalRole } : u))
+        );
         setConfirmation({ ...confirmation, isOpen: false });
       },
     });
   };
 
   const executeRoleChange = async (userId, newRole) => {
+    console.log("executeRoleChange triggered:", { userId, newRole });
     try {
       await API.put(`/users/${userId}/role`, { role: newRole });
       setUsers((currentUsers) =>
@@ -93,8 +100,7 @@ const UserManagement = () => {
       // Optionally, show a success toast/alert here
     } catch (err) {
       alert(err.response?.data?.message || "Failed to change role!");
-      // Revert the visual change on failure
-      setUsers([...users]);
+      fetchUsers(); // Refetch all users to ensure UI consistency on error
     }
   };
 
@@ -451,7 +457,7 @@ const UserManagement = () => {
                           <select
                             value={u.role}
                             onChange={(e) =>
-                              handleRoleChange(u.id, e.target.value, u.name)
+                              handleRoleChange(u.id, e.target.value, u.name || `User #${u.id}`, u.role) // Pass u.role as originalRole and added fallback for u.name
                             }
                             className="text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
                           >
