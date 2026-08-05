@@ -1,18 +1,6 @@
-const brevo = require("@getbrevo/brevo");
+const axios = require("axios");
 
-let apiInstance;
-let brevoConfigured = false;
-
-if (process.env.BREVO_API_KEY) {
-  apiInstance = new brevo.TransactionalEmailsApi();
-  apiInstance.setApiKey(
-    brevo.TransactionalEmailsApiApiKeys.apiKey,
-    process.env.BREVO_API_KEY,
-  );
-  brevoConfigured = true;
-} else {
-  console.warn("⚠️ BREVO_API_KEY not set — emails will not be sent.");
-}
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 // Parse "Name <email@example.com>" into { name, email }
 const parseFromAddress = (fromString) => {
@@ -26,8 +14,8 @@ const parseFromAddress = (fromString) => {
 // ========== SEND EMAIL FUNCTION ==========
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    if (!brevoConfigured) {
-      console.error("❌ Email error: Brevo API key not configured.");
+    if (!process.env.BREVO_API_KEY) {
+      console.error("❌ Email error: BREVO_API_KEY not configured.");
       return false;
     }
 
@@ -44,18 +32,28 @@ const sendEmail = async ({ to, subject, html }) => {
 
     const sender = parseFromAddress(process.env.EMAIL_FROM);
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.sender = sender;
-    sendSmtpEmail.to = [{ email: finalTo }];
-    sendSmtpEmail.subject = finalSubject;
-    sendSmtpEmail.htmlContent = finalHtml;
+    const response = await axios.post(
+      BREVO_API_URL,
+      {
+        sender,
+        to: [{ email: finalTo }],
+        subject: finalSubject,
+        htmlContent: finalHtml,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      },
+    );
 
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(`✅ Email sent to ${finalTo}`, response.body?.messageId || "");
-    return { success: true, info: response.body };
+    console.log(`✅ Email sent to ${finalTo}`, response.data?.messageId || "");
+    return { success: true, info: response.data };
   } catch (error) {
     console.error(
-      `❌ Email error: ${error.response?.body?.message || error.message}`,
+      `❌ Email error: ${error.response?.data?.message || error.message}`,
     );
     return false;
   }
