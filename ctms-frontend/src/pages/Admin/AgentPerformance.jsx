@@ -16,6 +16,8 @@ import {
   Search,
   Filter,
   Clock,
+  Menu,
+  X,
 } from "lucide-react";
 
 const AgentPerformance = () => {
@@ -25,6 +27,7 @@ const AgentPerformance = () => {
   const [performance, setPerformance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchPerformance = async () => {
@@ -56,7 +59,12 @@ const AgentPerformance = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance", active: true },
+    {
+      icon: UserCog,
+      label: "Agent Performance",
+      path: "/admin/agents/performance",
+      active: true,
+    },
     { icon: Tag, label: "Categories", path: "/admin/categories" },
     { icon: Tag, label: "Departments", path: "/admin/departments" },
     { icon: Ticket, label: "Complaints", path: "/admin" },
@@ -65,72 +73,122 @@ const AgentPerformance = () => {
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
+  const SidebarInner = (
+    <>
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {navItems.map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                  item.active
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs">Admin</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">Complaint</p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Agent Performance</p>
+        <div className="w-11" />
+      </div>
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {navItems.map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    item.active
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">{user?.name}</p>
-              <p className="text-gray-500 text-xs">Admin</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0">
+        {SidebarInner}
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Agent Performance</h1>
-            <p className="text-gray-500 text-sm">Track ticket metrics for all active agents.</p>
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
+      </aside>
+
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+              Agent Performance
+            </h1>
+            <p className="text-gray-500 text-xs sm:text-sm truncate">
+              Track ticket metrics for all active agents.
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg items-center gap-1.5">
               <Clock size={13} />
               {new Date().toLocaleDateString("en-US", {
                 day: "numeric",
@@ -141,62 +199,103 @@ const AgentPerformance = () => {
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
               <Bell size={18} />
             </button>
-            <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50">
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+              <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                {user?.name}
+              </span>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           <div className="flex flex-col gap-4 mb-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-800">Agent Performance Summary</h2>
-                  <p className="text-sm text-gray-500 mt-1">Overview of agents, assigned tickets, and resolution percentage.</p>
+                  <h2 className="text-lg font-bold text-gray-800">
+                    Agent Performance Summary
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Overview of agents, assigned tickets, and resolution
+                    percentage.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <div className="relative flex-1">
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search agents..."
-                      className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400"
+                      className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 w-full"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { label: "Total Agents", value: performance.length, color: "bg-blue-50", icon: Users },
-                { label: "Average Resolution", value: performance.length ? `${Math.round(performance.reduce((acc, agent) => acc + agent.resolutionRate, 0) / performance.length)}%` : "0%", color: "bg-green-50", icon: TrendingUp },
-                { label: "Total Assigned", value: performance.reduce((acc, agent) => acc + agent.totalAssigned, 0), color: "bg-purple-50", icon: Ticket },
+                {
+                  label: "Total Agents",
+                  value: performance.length,
+                  color: "bg-blue-50",
+                  icon: Users,
+                },
+                {
+                  label: "Average Resolution",
+                  value: performance.length
+                    ? `${Math.round(performance.reduce((acc, agent) => acc + agent.resolutionRate, 0) / performance.length)}%`
+                    : "0%",
+                  color: "bg-green-50",
+                  icon: TrendingUp,
+                },
+                {
+                  label: "Total Assigned",
+                  value: performance.reduce(
+                    (acc, agent) => acc + agent.totalAssigned,
+                    0,
+                  ),
+                  color: "bg-purple-50",
+                  icon: Ticket,
+                },
               ].map((stat, index) => (
-                <div key={index} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5"
+                >
                   <div className="flex items-center justify-between mb-4">
-                    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${stat.color}`}>
+                    <span
+                      className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${stat.color}`}
+                    >
                       <stat.icon size={18} className="text-blue-600" />
                     </span>
-                    <span className="text-xs font-semibold text-gray-500">{stat.label}</span>
+                    <span className="text-xs font-semibold text-gray-500">
+                      {stat.label}
+                    </span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-800">
+                    {stat.value}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
               <div>
                 <h3 className="font-bold text-gray-800">Agent Breakdown</h3>
-                <p className="text-sm text-gray-500">Each agent's ticket status and resolution rate.</p>
+                <p className="text-sm text-gray-500">
+                  Each agent's ticket status and resolution rate.
+                </p>
               </div>
               <div className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
                 <Filter size={14} />
@@ -205,42 +304,73 @@ const AgentPerformance = () => {
             </div>
 
             {loading ? (
-              <div className="text-center py-12 text-gray-500">Loading agent performance...</div>
+              <div className="text-center py-12 text-gray-500">
+                Loading agent performance...
+              </div>
             ) : filteredAgents.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">No agents found.</div>
+              <div className="text-center py-12 text-gray-500">
+                No agents found.
+              </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 {filteredAgents.map((agent) => (
-                  <div key={agent.id} className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                  <div
+                    key={agent.id}
+                    className="bg-gray-50 rounded-2xl p-4 sm:p-5 border border-gray-100"
+                  >
                     <div className="flex items-center justify-between gap-4 mb-4">
-                      <div>
-                        <p className="text-lg font-semibold text-gray-800">{agent.name}</p>
-                        <p className="text-sm text-gray-500">{agent.email}</p>
+                      <div className="min-w-0">
+                        <p className="text-lg font-semibold text-gray-800 truncate">
+                          {agent.name}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {agent.email}
+                        </p>
                       </div>
-                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">{agent.resolutionRate}%</span>
+                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700 shrink-0">
+                        {agent.resolutionRate}%
+                      </span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">Assigned</p>
-                        <p className="text-2xl font-bold text-gray-800">{agent.totalAssigned}</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">
+                          Assigned
+                        </p>
+                        <p className="text-2xl font-bold text-gray-800">
+                          {agent.totalAssigned}
+                        </p>
                       </div>
                       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">Resolved</p>
-                        <p className="text-2xl font-bold text-gray-800">{agent.resolved}</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">
+                          Resolved
+                        </p>
+                        <p className="text-2xl font-bold text-gray-800">
+                          {agent.resolved}
+                        </p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">In Progress</p>
-                        <p className="text-lg font-bold text-gray-800">{agent.inProgress}</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">
+                          In Progress
+                        </p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {agent.inProgress}
+                        </p>
                       </div>
                       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">Pending</p>
-                        <p className="text-lg font-bold text-gray-800">{agent.pending}</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-[.2em]">
+                          Pending
+                        </p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {agent.pending}
+                        </p>
                       </div>
                     </div>
                     <div className="mt-4">
-                      <div className="text-xs text-gray-500 mb-2">Resolution progress</div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        Resolution progress
+                      </div>
                       <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-blue-500 to-green-500"

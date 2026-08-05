@@ -252,6 +252,177 @@ const updateProfile = async (req, res) => {
   }
 }
 // ========== VERIFY EMAIL ==========
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://complaint-ticket-management-system-rho.vercel.app";
+
+const verificationSuccessPage = (name) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Verified ✅ - CTMS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(145deg, #e8f0fe 0%, #dbeafe 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 88px;
+      height: 88px;
+      background: #dcfce7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: pop 0.5s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    h1 { font-size: 26px; color: #111827; margin-bottom: 10px; }
+    p {
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    strong { color: #111827; }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+    .btn-secondary {
+      display: inline-block;
+      margin-top: 12px;
+      color: #2563eb;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { text-decoration: underline; }
+    .footer { margin-top: 28px; font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </div>
+    <h1>Email Verified!</h1>
+    <p>
+      Congratulations <strong>${name}</strong> 🎉<br />
+      Your email has been verified successfully.<br />
+      You can now sign in to your account.
+    </p>
+    <a class="btn" href="${FRONTEND_URL}/login">Go to Login →</a>
+    <div class="footer">© 2026 CTMS · Complaint Ticket Management System</div>
+  </div>
+</body>
+</html>
+`;
+
+const verificationErrorPage = (message) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verification Failed - CTMS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 88px;
+      height: 88px;
+      background: #fee2e2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    h1 { font-size: 24px; color: #111827; margin-bottom: 10px; }
+    p { color: #6b7280; font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+    .footer { margin-top: 28px; font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    </div>
+    <h1>Verification Failed</h1>
+    <p>${message}</p>
+    <a class="btn" href="${FRONTEND_URL}/register">Sign Up Again →</a>
+    <div class="footer">© 2026 CTMS · Complaint Ticket Management System</div>
+  </div>
+</body>
+</html>
+`;
+
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
@@ -263,10 +434,9 @@ const verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid verification token!"
-      });
+      return res.status(400).send(
+        verificationErrorPage("This verification link is invalid or has already been used. Please register again to get a new link.")
+      );
     }
 
     await user.update({
@@ -274,16 +444,12 @@ const verifyEmail = async (req, res) => {
       verificationToken: null
     });
 
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully!"
-    });
+    res.status(200).send(verificationSuccessPage(user.name));
 
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).send(
+      verificationErrorPage("Something went wrong while verifying your email. Please try again later.")
+    );
   }
 };
 

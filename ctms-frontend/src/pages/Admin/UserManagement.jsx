@@ -15,6 +15,8 @@ import {
   Search,
   CheckCircle,
   XCircle,
+  Menu,
+  X,
 } from "lucide-react";
 
 const UserManagement = () => {
@@ -25,6 +27,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,7 +61,7 @@ const UserManagement = () => {
 
   const handleStatusToggle = async (userId) => {
     try {
-      const res = await API.put(`/users/${userId}/status`);
+      await API.put(`/users/${userId}/status`);
       setUsers(
         users.map((u) =>
           u.id === userId ? { ...u, isActive: !u.isActive } : u,
@@ -93,7 +96,11 @@ const UserManagement = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users", active: true },
-    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
+    {
+      icon: UserCog,
+      label: "Agent Performance",
+      path: "/admin/agents/performance",
+    },
     { icon: Tag, label: "Categories", path: "/admin" },
     { icon: Ticket, label: "Complaints", path: "/admin" },
     { icon: BarChart3, label: "Reports", path: "/admin" },
@@ -101,96 +108,138 @@ const UserManagement = () => {
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
+  const SidebarInner = (
+    <>
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {navItems.map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                  item.active
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs">Admin</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* SIDEBAR */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">
-                Complaint
-              </p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">User Management</p>
+        <div className="w-11" />
+      </div>
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {navItems.map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    item.active
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">
-                {user?.name}
-              </p>
-              <p className="text-gray-500 text-xs">Admin</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0">
+        {SidebarInner}
       </aside>
 
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">User Management</h1>
-            <p className="text-gray-500 text-sm">
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
+      </aside>
+
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+              User Management
+            </h1>
+            <p className="text-gray-500 text-xs sm:text-sm truncate">
               Manage all users and their roles
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
               <Bell size={18} />
             </button>
-            <div className="flex items-center gap-2 border border-gray-200 px-3 py-1.5 rounded-lg">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-center gap-2 border border-gray-200 px-2 sm:px-3 py-1.5 rounded-lg">
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="hidden sm:inline text-sm font-medium text-gray-700">
                 {user?.name}
               </span>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {[
               {
                 label: "Total Users",
@@ -213,7 +262,7 @@ const UserManagement = () => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm"
               >
                 <p className={`text-2xl font-bold ${stat.textColor}`}>
                   {stat.value}
@@ -225,15 +274,15 @@ const UserManagement = () => {
 
           {/* Users Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-bold text-gray-800">All Users</h3>
                 <p className="text-gray-500 text-xs mt-0.5">
                   {filteredUsers.length} users found
                 </p>
               </div>
-              <div className="flex gap-2">
-                <div className="relative">
+              <div className="flex flex-wrap gap-2">
+                <div className="relative flex-1 sm:flex-none min-w-[140px]">
                   <Search
                     size={14}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -243,13 +292,13 @@ const UserManagement = () => {
                     placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-48"
+                    className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 w-full sm:w-48"
                   />
                 </div>
                 <select
                   value={filterRole}
                   onChange={(e) => setFilterRole(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer"
+                  className="px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-400 bg-white cursor-pointer flex-1 sm:flex-none"
                 >
                   <option value="all">All Roles</option>
                   <option value="admin">Admin</option>
@@ -259,107 +308,112 @@ const UserManagement = () => {
               </div>
             </div>
 
-            {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">User</div>
-              <div className="col-span-1">Role</div>
-              <div className="col-span-1">Status</div>
-              <div className="col-span-1">Actions</div>
-            </div>
-
-            {loading && (
-              <div className="text-center py-12">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-gray-500 text-sm">Loading...</p>
-              </div>
-            )}
-
-            {!loading && filteredUsers.length === 0 && (
-              <div className="text-center py-12">
-                <Users size={40} className="text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No users found</p>
-              </div>
-            )}
-
-            {!loading &&
-              filteredUsers.map((u) => (
-                <div
-                  key={u.id}
-                  className="grid grid-cols-6 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
-                >
-                  <div className="col-span-1 text-xs text-gray-400 font-mono">
-                    #{u.id}
-                  </div>
-
-                  <div className="col-span-2 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {u.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">
-                        {u.name}
-                      </p>
-                      <p className="text-xs text-gray-400">{u.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="col-span-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-lg font-medium ${getRoleBadge(u.role)}`}
-                    >
-                      {u.role}
-                    </span>
-                  </div>
-
-                  <div className="col-span-1">
-                    {u.isActive ? (
-                      <span className="flex items-center gap-1 text-xs text-green-600">
-                        <CheckCircle size={13} />
-                        Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-xs text-red-500">
-                        <XCircle size={13} />
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="col-span-1 flex gap-2">
-                    {/* Role Change */}
-                    {u.id !== user?.id && (
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
-                      >
-                        <option value="user">User</option>
-                        <option value="agent">Agent</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    )}
-
-                    {/* Status Toggle */}
-                    {u.id !== user?.id && (
-                      <button
-                        onClick={() => handleStatusToggle(u.id)}
-                        className={`text-xs px-2 py-1 rounded-lg font-medium cursor-pointer transition-all ${
-                          u.isActive
-                            ? "bg-red-50 text-red-600 hover:bg-red-100"
-                            : "bg-green-50 text-green-600 hover:bg-green-100"
-                        }`}
-                      >
-                        {u.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                    )}
-
-                    {u.id === user?.id && (
-                      <span className="text-xs text-gray-400">You</span>
-                    )}
-                  </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[700px]">
+                <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="col-span-1">ID</div>
+                  <div className="col-span-2">User</div>
+                  <div className="col-span-1">Role</div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-1">Actions</div>
                 </div>
-              ))}
+
+                {loading && (
+                  <div className="text-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-gray-500 text-sm">Loading...</p>
+                  </div>
+                )}
+
+                {!loading && filteredUsers.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users size={40} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">No users found</p>
+                  </div>
+                )}
+
+                {!loading &&
+                  filteredUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      className="grid grid-cols-6 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
+                    >
+                      <div className="col-span-1 text-xs text-gray-400 font-mono">
+                        #{u.id}
+                      </div>
+
+                      <div className="col-span-2 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {u.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">
+                            {u.name}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {u.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="col-span-1">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-lg font-medium ${getRoleBadge(u.role)}`}
+                        >
+                          {u.role}
+                        </span>
+                      </div>
+
+                      <div className="col-span-1">
+                        {u.isActive ? (
+                          <span className="flex items-center gap-1 text-xs text-green-600">
+                            <CheckCircle size={13} />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-xs text-red-500">
+                            <XCircle size={13} />
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="col-span-1 flex flex-wrap gap-2">
+                        {u.id !== user?.id && (
+                          <select
+                            value={u.role}
+                            onChange={(e) =>
+                              handleRoleChange(u.id, e.target.value)
+                            }
+                            className="text-xs border border-gray-200 px-2 py-1 rounded-lg outline-none focus:border-blue-400 bg-white cursor-pointer"
+                          >
+                            <option value="user">User</option>
+                            <option value="agent">Agent</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        )}
+
+                        {u.id !== user?.id && (
+                          <button
+                            onClick={() => handleStatusToggle(u.id)}
+                            className={`text-xs px-2 py-1 rounded-lg font-medium cursor-pointer transition-all ${
+                              u.isActive
+                                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                : "bg-green-50 text-green-600 hover:bg-green-100"
+                            }`}
+                          >
+                            {u.isActive ? "Deactivate" : "Activate"}
+                          </button>
+                        )}
+
+                        {u.id === user?.id && (
+                          <span className="text-xs text-gray-400">You</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

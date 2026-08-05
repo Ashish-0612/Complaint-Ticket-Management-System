@@ -18,6 +18,7 @@ import {
   CheckCircle,
   AlertCircle,
   X,
+  Menu,
 } from "lucide-react";
 
 const DepartmentManagement = () => {
@@ -32,6 +33,7 @@ const DepartmentManagement = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchDepartments();
@@ -40,14 +42,9 @@ const DepartmentManagement = () => {
   const fetchDepartments = async () => {
     try {
       const res = await API.get("/departments");
-
-      console.log("Departments API Response:", res);
-      console.log("Departments Data:", res.data);
-
       setDepartments(res.data.data);
     } catch (err) {
       console.log("Department Error:", err);
-      console.log("Response:", err.response);
     } finally {
       setLoading(false);
     }
@@ -66,11 +63,9 @@ const DepartmentManagement = () => {
 
     try {
       if (editingDept) {
-        // Update
         await API.put(`/departments/${editingDept.id}`, formData);
         setSuccess("Department updated successfully!");
       } else {
-        // Create
         await API.post("/departments", formData);
         setSuccess("Department created successfully!");
       }
@@ -108,7 +103,11 @@ const DepartmentManagement = () => {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: UserCog, label: "Agent Performance", path: "/admin/agents/performance" },
+    {
+      icon: UserCog,
+      label: "Agent Performance",
+      path: "/admin/agents/performance",
+    },
     {
       icon: Tag,
       label: "Departments",
@@ -121,89 +120,131 @@ const DepartmentManagement = () => {
     { icon: UserCog, label: "Profile", path: "/profile" },
   ];
 
+  const SidebarInner = (
+    <>
+      <div className="px-5 py-5 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Ticket size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-none">
+              Complaint
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">Management System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
+          Main Menu
+        </p>
+        <ul className="space-y-0.5">
+          {navItems.map((item, i) => (
+            <li key={i}>
+              <button
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
+                  item.active
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="px-3 py-4 border-t border-gray-800">
+        <div className="flex items-center gap-2.5 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.name}
+            </p>
+            <p className="text-gray-500 text-xs">Admin</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer min-h-[44px]"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* SIDEBAR */}
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Ticket size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm leading-none">
-                Complaint
-              </p>
-              <p className="text-gray-400 text-xs mt-0.5">Management System</p>
-            </div>
-          </div>
-        </div>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white hover:bg-gray-800"
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <p className="text-white font-bold text-sm">Departments</p>
+        <div className="w-11" />
+      </div>
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-2 mb-3">
-            Main Menu
-          </p>
-          <ul className="space-y-0.5">
-            {navItems.map((item, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                    item.active
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={17} />
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="px-3 py-4 border-t border-gray-800">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-xs font-medium truncate">
-                {user?.name}
-              </p>
-              <p className="text-gray-500 text-xs">Admin</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-red-600 hover:text-white text-sm transition-all cursor-pointer"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
+      <aside className="hidden md:flex w-56 bg-gray-900 flex-col flex-shrink-0">
+        {SidebarInner}
       </aside>
 
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-64 bg-gray-900 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {SidebarInner}
+      </aside>
+
+      <div className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
               Department Management
             </h1>
-            <p className="text-gray-500 text-sm">Manage all departments</p>
+            <p className="text-gray-500 text-xs sm:text-sm truncate">
+              Manage all departments
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => {
                 setShowAddForm(true);
                 setEditingDept(null);
                 setFormData({ name: "", description: "" });
               }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all min-h-[44px]"
             >
               <Plus size={16} />
-              Add Department
+              <span className="hidden sm:inline">Add Department</span>
             </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg cursor-pointer">
               <Bell size={18} />
@@ -211,8 +252,7 @@ const DepartmentManagement = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Success/Error */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {success && (
             <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl mb-4 text-sm">
               <CheckCircle size={15} />
@@ -226,9 +266,8 @@ const DepartmentManagement = () => {
             </div>
           )}
 
-          {/* Add/Edit Form */}
           {showAddForm && (
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-800">
                   {editingDept ? "Edit Department" : "Add New Department"}
@@ -278,11 +317,11 @@ const DepartmentManagement = () => {
                   />
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer min-h-[44px]"
                   >
                     {submitLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -298,7 +337,7 @@ const DepartmentManagement = () => {
                       setShowAddForm(false);
                       setEditingDept(null);
                     }}
-                    className="px-6 py-3 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all cursor-pointer text-sm"
+                    className="px-6 py-3 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all cursor-pointer text-sm min-h-[44px]"
                   >
                     Cancel
                   </button>
@@ -307,84 +346,88 @@ const DepartmentManagement = () => {
             </div>
           )}
 
-          {/* Departments Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100">
+            <div className="p-4 sm:p-5 border-b border-gray-100">
               <h3 className="font-bold text-gray-800">All Departments</h3>
               <p className="text-gray-500 text-xs mt-0.5">
                 {departments.length} departments
               </p>
             </div>
 
-            {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">Department</div>
-              <div className="col-span-1">Status</div>
-              <div className="col-span-1">Actions</div>
-            </div>
-
-            {loading && (
-              <div className="text-center py-12">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-gray-500 text-sm">Loading...</p>
-              </div>
-            )}
-
-            {!loading && departments.length === 0 && (
-              <div className="text-center py-12">
-                <Tag size={40} className="text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No departments found</p>
-              </div>
-            )}
-
-            {!loading &&
-              departments.map((dept) => (
-                <div
-                  key={dept.id}
-                  className="grid grid-cols-5 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
-                >
-                  <div className="col-span-1 text-xs text-gray-400 font-mono">
-                    #{dept.id}
-                  </div>
-
-                  <div className="col-span-2">
-                    <p className="text-sm font-semibold text-gray-800">
-                      {dept.name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {dept.description || "No description"}
-                    </p>
-                  </div>
-
-                  <div className="col-span-1">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                        dept.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {dept.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-
-                  <div className="col-span-1 flex gap-2">
-                    <button
-                      onClick={() => handleEdit(dept)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-all"
-                    >
-                      <Edit2 size={15} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(dept.id)}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="col-span-1">ID</div>
+                  <div className="col-span-2">Department</div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-1">Actions</div>
                 </div>
-              ))}
+
+                {loading && (
+                  <div className="text-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-gray-500 text-sm">Loading...</p>
+                  </div>
+                )}
+
+                {!loading && departments.length === 0 && (
+                  <div className="text-center py-12">
+                    <Tag size={40} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">
+                      No departments found
+                    </p>
+                  </div>
+                )}
+
+                {!loading &&
+                  departments.map((dept) => (
+                    <div
+                      key={dept.id}
+                      className="grid grid-cols-5 gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-all items-center"
+                    >
+                      <div className="col-span-1 text-xs text-gray-400 font-mono">
+                        #{dept.id}
+                      </div>
+
+                      <div className="col-span-2">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {dept.name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {dept.description || "No description"}
+                        </p>
+                      </div>
+
+                      <div className="col-span-1">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-lg font-medium ${
+                            dept.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {dept.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+
+                      <div className="col-span-1 flex gap-2">
+                        <button
+                          onClick={() => handleEdit(dept)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-all"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(dept.id)}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
