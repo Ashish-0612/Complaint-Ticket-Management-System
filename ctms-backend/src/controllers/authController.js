@@ -13,7 +13,7 @@ const { sendEmail, verificationEmail } = require("../config/email");
 const register = async (req, res) => {
   try {
     // Step 1 — Get data from request body
-    const { name, email, password, role } = req.body
+    const { name, email, password } = req.body
 
     // Step 2 — Validate required fields
     if (!name) {
@@ -59,7 +59,7 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "user",
+      role: "user",
       isVerified: false,
       verificationToken,
     });
