@@ -1,3 +1,7 @@
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
+
+
 const nodemailer = require("nodemailer");
 
 // ========== CREATE TRANSPORTER ==========
@@ -12,15 +16,19 @@ const initTransporter = async () => {
   ) {
     try {
       const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: testAccount.smtp.host,
-        port: testAccount.smtp.port,
-        secure: testAccount.smtp.secure,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
+     transporter = nodemailer.createTransport({
+       host: process.env.EMAIL_HOST,
+       port: Number(process.env.EMAIL_PORT) || 587,
+       secure: false,
+       family: 4,
+       auth: {
+         user: process.env.EMAIL_USER,
+         pass: process.env.EMAIL_PASS,
+       },
+       connectionTimeout: 20000,
+       greetingTimeout: 20000,
+       socketTimeout: 20000,
+     });
       usingTestAccount = true;
       console.warn(
         "⚠️ No SMTP creds found — using Ethereal test account for development.",
